@@ -102,8 +102,8 @@ func (pa *PartitionAdjuster) executeSplit(plan *AdjustmentPlan) error {
 	partitionID := plan.PartitionID
 
 	// 获取原分区
-	originalPartition := pa.partitionMgr.GetPartition(partitionID)
-	if originalPartition == nil {
+	originalPartition, exists := pa.partitionMgr.GetPartition(partitionID)
+	if !exists {
 		return fmt.Errorf("partition %s not found", partitionID)
 	}
 
@@ -139,15 +139,15 @@ func (pa *PartitionAdjuster) executeMerge(plan *AdjustmentPlan) error {
 	// 获取所有参与合并的分区
 	partitions := make([]*Partition, 0, len(affectedPartitionIDs)+1)
 
-	mainPartition := pa.partitionMgr.GetPartition(mainPartitionID)
-	if mainPartition == nil {
+	mainPartition, exists := pa.partitionMgr.GetPartition(mainPartitionID)
+	if !exists {
 		return fmt.Errorf("main partition %s not found", mainPartitionID)
 	}
 	partitions = append(partitions, mainPartition)
 
 	for _, partitionID := range affectedPartitionIDs {
-		partition := pa.partitionMgr.GetPartition(partitionID)
-		if partition == nil {
+		partition, exists := pa.partitionMgr.GetPartition(partitionID)
+		if !exists {
 			return fmt.Errorf("affected partition %s not found", partitionID)
 		}
 		partitions = append(partitions, partition)
@@ -182,8 +182,8 @@ func (pa *PartitionAdjuster) executeMerge(plan *AdjustmentPlan) error {
 // executeResize 执行调整大小
 func (pa *PartitionAdjuster) executeResize(plan *AdjustmentPlan) error {
 	// 调整大小通常不需要数据迁移，只是改变边界
-	partition := pa.partitionMgr.GetPartition(plan.PartitionID)
-	if partition == nil {
+	_, exists := pa.partitionMgr.GetPartition(plan.PartitionID)
+	if !exists {
 		return fmt.Errorf("partition %s not found", plan.PartitionID)
 	}
 
@@ -297,7 +297,7 @@ func (pa *PartitionAdjuster) migrateSubscribersForSplit(originalPartition *Parti
 // migrateSubscribersForMerge 迁移订阅者（合并）
 func (pa *PartitionAdjuster) migrateSubscribersForMerge(oldPartitions []*Partition, newPartition *Partition) {
 	// 收集所有订阅者
-	allSubscribers := make(map[string]*AOISubscriber)
+	allSubscribers := make(map[string]*PartitionSubscriber)
 
 	for _, partition := range oldPartitions {
 		for playerID, subscriber := range partition.Subscribers {
@@ -320,7 +320,7 @@ func (pa *PartitionAdjuster) migrateSubscribersForMerge(oldPartitions []*Partiti
 }
 
 // findPartitionForSubscriber 查找订阅者所属的新分区
-func (pa *PartitionAdjuster) findPartitionForSubscriber(subscriber *AOISubscriber, partitions []*Partition) *Partition {
+func (pa *PartitionAdjuster) findPartitionForSubscriber(subscriber *PartitionSubscriber, partitions []*Partition) *Partition {
 	// 根据订阅者的视图中心点确定所属分区
 	centerX := subscriber.ViewRect.X + subscriber.ViewRect.Width/2
 	centerY := subscriber.ViewRect.Y + subscriber.ViewRect.Height/2

@@ -129,8 +129,8 @@ func (sm *StateSyncManager) PublishChange(change *StateChange) {
 
 // GetStateSnapshot 获取状态快照
 func (sm *StateSyncManager) GetStateSnapshot(partitionID string, sinceVersion int64) []*StateChange {
-	partition := sm.partitionMgr.GetPartition(partitionID)
-	if partition == nil {
+	partition, exists := sm.partitionMgr.GetPartition(partitionID)
+	if !exists {
 		return nil
 	}
 

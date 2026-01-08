@@ -172,7 +172,7 @@ const (
 	AOIEntityEnter AOIEventType = iota
 	AOIEntityLeave
 	AOIEntityMove
-	AOIStateChange
+	AOIEventTypeStateChange
 	AOIEntitySpawn
 	AOIEntityDespawn
 )

@@ -3,8 +3,6 @@ package main
 import (
 	"sync"
 	"time"
-
-	"github.com/asynkron/protoactor-go/actor"
 )
 
 // MetricsCollector 性能指标收集器

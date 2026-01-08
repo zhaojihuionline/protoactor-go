@@ -251,8 +251,8 @@ func (lb *LoadBalancer) findUnderloadedPartitions() []string {
 
 // createSplitPlan 创建分割计划
 func (lb *LoadBalancer) createSplitPlan(partitionID string) *AdjustmentPlan {
-	partition := lb.partitionMgr.GetPartition(partitionID)
-	if partition == nil {
+	partition, exists := lb.partitionMgr.GetPartition(partitionID)
+	if !exists {
 		return nil
 	}
 

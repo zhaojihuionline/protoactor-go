@@ -7,6 +7,14 @@ import (
 	"github.com/asynkron/protoactor-go/actor"
 )
 
+// PartitionSubscriber 分区订阅者信息
+type PartitionSubscriber struct {
+	PlayerID   string
+	AOIManager *actor.PID
+	ViewRect   Rectangle
+	LastUpdate time.Time
+}
+
 // Partition 地图分区
 type Partition struct {
 	ID           string
@@ -14,20 +22,13 @@ type Partition struct {
 	Size         int
 	GridStates   map[Point]*GridState
 	Entities     map[string]Entity
-	Subscribers  map[string]*AOISubscriber // 玩家ID -> AOI订阅者
+	Subscribers  map[string]*PartitionSubscriber // 玩家ID -> 分区订阅者
 	StateVersion int64
 	mutex        sync.RWMutex
 	config       *Config
 	system       *actor.ActorSystem
 }
 
-// AOISubscriber AOI订阅者
-type AOISubscriber struct {
-	PlayerID   string
-	AOIManager *actor.PID
-	ViewRect   Rectangle
-	LastUpdate time.Time
-}
 
 // NewPartition 创建新分区
 func NewPartition(id string, bounds Rectangle, config *Config, system *actor.ActorSystem) *Partition {
@@ -37,7 +38,7 @@ func NewPartition(id string, bounds Rectangle, config *Config, system *actor.Act
 		Size:         bounds.Width, // 假设正方形分区
 		GridStates:   make(map[Point]*GridState),
 		Entities:     make(map[string]Entity),
-		Subscribers:  make(map[string]*AOISubscriber),
+		Subscribers:  make(map[string]*PartitionSubscriber),
 		StateVersion: 1,
 		config:       config,
 		system:       system,
@@ -71,7 +72,7 @@ func (p *Partition) AddSubscriber(playerID string, aoiManager *actor.PID, viewRe
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 
-	p.Subscribers[playerID] = &AOISubscriber{
+	p.Subscribers[playerID] = &PartitionSubscriber{
 		PlayerID:   playerID,
 		AOIManager: aoiManager,
 		ViewRect:   viewRect,

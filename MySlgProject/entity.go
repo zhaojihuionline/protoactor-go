@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"sync"
 	"time"
 
@@ -239,7 +240,7 @@ func (ea *EntityActor) handleAttack(ctx actor.Context, cmd *AttackCommand) {
 	// 应用伤害
 	targetPID := ea.getEntityPID(cmd.TargetID)
 	if targetPID != nil {
-		ea.system.Root.Send(targetPID, &DamageTaken{
+		ctx.ActorSystem().Root.Send(targetPID, &DamageTaken{
 			AttackerID: ea.entity.GetID(),
 			Damage:     damage,
 			DamageType: cmd.DamageType,
@@ -451,8 +452,8 @@ type HealResult struct {
 
 // 错误定义
 var (
-	ErrEntityExists   = actor.NewError(1, "entity already exists")
-	ErrEntityNotFound = actor.NewError(2, "entity not found")
+	ErrEntityExists   = errors.New("entity already exists")
+	ErrEntityNotFound = errors.New("entity not found")
 )
 
 // 事件定义

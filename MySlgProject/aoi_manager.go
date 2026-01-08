@@ -9,19 +9,19 @@ import (
 
 // AOIManager AOI管理器 - 为每个玩家管理可见区域
 type AOIManager struct {
-	playerID       string
-	currentPos     Point
-	viewRange      int
-	subscriptions  map[string]*Subscription // partitionID -> 订阅信息
-	stateCache     map[string]interface{}   // AOI状态缓存
-	eventQueue     chan AOIEvent           // AOI事件队列
-	cacheMutex     sync.RWMutex
-	subMutex       sync.RWMutex
-	config         *Config
-	system         *actor.ActorSystem
-	spatialIndex   *SpatialIndex
-	partitionMgr   *PartitionManager
-	lastUpdate     time.Time
+	playerID      string
+	currentPos    Point
+	viewRange     int
+	subscriptions map[string]*Subscription // partitionID -> 订阅信息
+	stateCache    map[string]interface{}   // AOI状态缓存
+	eventQueue    chan AOIEvent            // AOI事件队列
+	cacheMutex    sync.RWMutex
+	subMutex      sync.RWMutex
+	config        *Config
+	system        *actor.ActorSystem
+	spatialIndex  *SpatialIndex
+	partitionMgr  *PartitionManager
+	lastUpdate    time.Time
 }
 
 // Subscription AOI订阅信息
@@ -42,9 +42,9 @@ func NewAOIManager(playerID string, initialPos Point, config *Config, system *ac
 	spatialIndex *SpatialIndex, partitionMgr *PartitionManager) *AOIManager {
 
 	return &AOIManager{
-		playerID:     playerID,
-		currentPos:   initialPos,
-		viewRange:    config.AOI.ViewRange,
+		playerID:      playerID,
+		currentPos:    initialPos,
+		viewRange:     config.AOI.ViewRange,
 		subscriptions: make(map[string]*Subscription),
 		stateCache:    make(map[string]interface{}),
 		eventQueue:    make(chan AOIEvent, 1000),
@@ -121,7 +121,12 @@ func (aoi *AOIManager) UpdatePosition(newPos Point) {
 
 // getCoveredPartitions 获取位置覆盖的分区
 func (aoi *AOIManager) getCoveredPartitions(center Point) map[string]bool {
-	return aoi.spatialIndex.GetPartitionsInRange(center, aoi.viewRange)
+	partitions := aoi.spatialIndex.GetPartitionsInRange(center, aoi.viewRange)
+	result := make(map[string]bool)
+	for _, partitionID := range partitions {
+		result[partitionID] = true
+	}
+	return result
 }
 
 // getPartitionsToUnsubscribe 获取需要取消订阅的分区
@@ -181,7 +186,7 @@ func (aoi *AOIManager) unsubscribePartition(partitionID string) {
 	aoi.subMutex.Lock()
 	defer aoi.subMutex.Unlock()
 
-	if subscription, exists := aoi.subscriptions[partitionID]; exists {
+	if _, exists := aoi.subscriptions[partitionID]; exists {
 		delete(aoi.subscriptions, partitionID)
 
 		// 通知分区管理器
@@ -203,12 +208,12 @@ func (aoi *AOIManager) GetAOIState() *AOIState {
 	defer aoi.subMutex.RUnlock()
 
 	state := &AOIState{
-		PlayerID:     aoi.playerID,
-		CenterPos:    aoi.currentPos,
-		ViewRange:    aoi.viewRange,
+		PlayerID:        aoi.playerID,
+		CenterPos:       aoi.currentPos,
+		ViewRange:       aoi.viewRange,
 		VisibleEntities: make([]Entity, 0),
-		VisibleGrids:   make([]*GridState, 0),
-		LastUpdate:   aoi.lastUpdate,
+		VisibleGrids:    make([]*GridState, 0),
+		LastUpdate:      aoi.lastUpdate,
 	}
 
 	// 收集所有可见实体和格子
@@ -247,7 +252,7 @@ func (aoi *AOIManager) CleanupExpiredCache() {
 	defer aoi.cacheMutex.Unlock()
 
 	now := time.Now()
-	for key, state := range aoi.stateCache {
+	for key := range aoi.stateCache {
 		// 这里可以根据状态的时间戳判断是否过期
 		// 暂时清理超过5分钟未访问的缓存
 		if now.Sub(aoi.lastUpdate) > 5*time.Minute {
@@ -294,9 +299,9 @@ func (a *AOIManagerActor) handleUpdatePosition(ctx actor.Context, msg *UpdatePos
 
 	// 回复确认
 	ctx.Respond(&PositionUpdateAck{
-		PlayerID:   a.manager.playerID,
+		PlayerID:    a.manager.playerID,
 		NewPosition: msg.NewPosition,
-		Timestamp:  time.Now(),
+		Timestamp:   time.Now(),
 	})
 }
 
@@ -366,12 +371,12 @@ func (a *AOIManagerActor) sendToClient(msg *AOIStateChange) {
 
 // AOIState AOI状态
 type AOIState struct {
-	PlayerID       string
-	CenterPos      Point
-	ViewRange      int
+	PlayerID        string
+	CenterPos       Point
+	ViewRange       int
 	VisibleEntities []Entity
-	VisibleGrids   []*GridState
-	LastUpdate     time.Time
+	VisibleGrids    []*GridState
+	LastUpdate      time.Time
 }
 
 // Message types for AOI communication

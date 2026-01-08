@@ -4,6 +4,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/asynkron/protoactor-go/actor"
 	"github.com/asynkron/protoactor-go/eventstream"
 )
 
@@ -42,7 +43,7 @@ type EventSystem struct {
 	eventStream    *eventstream.EventStream
 	subscriptions  map[string][]*EventSubscription
 	mutex          sync.RWMutex
-	eventBuffer    []*GameEvent
+	eventBuffer    []GameEvent
 	bufferSize     int
 	bufferMutex    sync.RWMutex
 	system         *actor.ActorSystem
@@ -68,7 +69,7 @@ func NewEventSystem(system *actor.ActorSystem, bufferSize int) *EventSystem {
 	return &EventSystem{
 		eventStream:   system.EventStream,
 		subscriptions: make(map[string][]*EventSubscription),
-		eventBuffer:   make([]*GameEvent, 0, bufferSize),
+		eventBuffer:   make([]GameEvent, 0, bufferSize),
 		bufferSize:    bufferSize,
 		system:        system,
 	}
@@ -81,7 +82,7 @@ func (es *EventSystem) Publish(event GameEvent) {
 
 	// 添加到缓冲区用于历史查询
 	es.bufferMutex.Lock()
-	es.eventBuffer = append(es.eventBuffer, &event)
+	es.eventBuffer = append(es.eventBuffer, event)
 	if len(es.eventBuffer) > es.bufferSize {
 		// 移除最旧的事件
 		es.eventBuffer = es.eventBuffer[1:]
@@ -172,11 +173,11 @@ func (es *EventSystem) matchesFilter(event GameEvent, filter EventFilter) bool {
 }
 
 // GetRecentEvents 获取最近事件
-func (es *EventSystem) GetRecentEvents(eventType string, limit int) []*GameEvent {
+func (es *EventSystem) GetRecentEvents(eventType string, limit int) []GameEvent {
 	es.bufferMutex.RLock()
 	defer es.bufferMutex.RUnlock()
 
-	result := make([]*GameEvent, 0)
+	result := make([]GameEvent, 0)
 	count := 0
 
 	// 从缓冲区末尾向前查找（最新的）

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"sync"
 	"time"
 
@@ -97,7 +98,7 @@ func (sub *AOISubscriber) UnsubscribePartition(partitionID string) error {
 	sub.bufferMutex.Lock()
 	defer sub.bufferMutex.Unlock()
 
-	if subscription, exists := sub.subscriptions[partitionID]; exists {
+	if _, exists := sub.subscriptions[partitionID]; exists {
 		// 通知分区管理器
 		if partition, exists := sub.partitionMgr.GetPartition(partitionID); exists {
 			partition.RemoveSubscriber(sub.playerID)
@@ -319,14 +320,9 @@ func (sub *AOISubscriber) shouldResync(oldRect, newRect Rectangle) bool {
 
 // requestResync 请求重新同步
 func (sub *AOISubscriber) requestResync(partitionID string) {
-	resyncMsg := &RequestPartitionResync{
-		PlayerID:    sub.playerID,
-		PartitionID: partitionID,
-	}
-
 	if partition, exists := sub.partitionMgr.GetPartition(partitionID); exists {
-		// 发送重新同步请求到分区
-		sub.system.Root.Send(partition.ActorPID, resyncMsg)
+		// 直接重新同步分区数据到订阅者
+		sub.resyncPartitionData(partition)
 	}
 }
 
@@ -343,7 +339,14 @@ type RequestPartitionResync struct {
 	PartitionID string
 }
 
+// resyncPartitionData 重新同步分区数据到订阅者
+func (sub *AOISubscriber) resyncPartitionData(partition *Partition) {
+	// 这里应该实现重新同步逻辑
+	// 例如：发送分区中的所有实体信息给订阅者
+	// 暂时留空，后续实现
+}
+
 // Errors
 var (
-	ErrPartitionNotFound = actor.NewError(1, "partition not found")
+	ErrPartitionNotFound = errors.New("partition not found")
 )

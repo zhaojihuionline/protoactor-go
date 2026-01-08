@@ -3,6 +3,8 @@ package main
 import (
 	"sync"
 	"time"
+
+	"github.com/asynkron/protoactor-go/actor"
 )
 
 // GridStateManager 格子状态管理器
@@ -258,17 +260,3 @@ func (gsm *GridStateManager) generateResource(pos Point) *Resource {
 	return nil
 }
 
-// Helper functions
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
