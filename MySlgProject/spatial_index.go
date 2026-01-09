@@ -7,20 +7,20 @@ import (
 
 // SpatialIndex 空间索引 - 使用四叉树进行空间分区
 type SpatialIndex struct {
-	root         *QuadNode
-	regionSize   int
-	mutex        sync.RWMutex
-	config       *Config
+	root       *QuadNode
+	regionSize int
+	mutex      sync.RWMutex
+	config     *Config
 }
 
 // QuadNode 四叉树节点
 type QuadNode struct {
-	bounds     Rectangle
-	children   [4]*QuadNode // 四个子节点：左上、右上、左下、右下
-	entities   map[string]Entity
-	isLeaf     bool
-	level      int
-	maxLevel   int
+	bounds      Rectangle
+	children    [4]*QuadNode // 四个子节点：左上、右上、左下、右下
+	entities    map[string]Entity
+	isLeaf      bool
+	level       int
+	maxLevel    int
 	maxEntities int
 }
 
@@ -38,7 +38,7 @@ func NewSpatialIndex(config *Config) *SpatialIndex {
 		entities:    make(map[string]Entity),
 		isLeaf:      true,
 		level:       0,
-		maxLevel:    6, // 最大深度
+		maxLevel:    6,  // 最大深度
 		maxEntities: 16, // 每个节点最大实体数
 	}
 
@@ -51,8 +51,8 @@ func NewSpatialIndex(config *Config) *SpatialIndex {
 
 // GetPartitionAt 获取坐标所在的区域ID
 func (si *SpatialIndex) GetPartitionAt(point Point) string {
-	regionX := point.X / si.regionSize
-	regionY := point.Y / si.regionSize
+	regionX := point.X / PartitionSize
+	regionY := point.Y / PartitionSize
 	return fmt.Sprintf("region_%d_%d", regionX, regionY)
 }
 
@@ -62,10 +62,10 @@ func (si *SpatialIndex) GetPartitionBounds(partitionID string) Rectangle {
 	fmt.Sscanf(partitionID, "region_%d_%d", &regionX, &regionY)
 
 	return Rectangle{
-		X:      regionX * si.regionSize,
-		Y:      regionY * si.regionSize,
-		Width:  si.regionSize,
-		Height: si.regionSize,
+		X:      regionX * PartitionSize,
+		Y:      regionY * PartitionSize,
+		Width:  PartitionSize,
+		Height: PartitionSize,
 	}
 }
 
@@ -78,9 +78,15 @@ func (si *SpatialIndex) GetPartitionsInRange(center Point, radius int) []string 
 
 	partitions := make(map[string]bool)
 
-	for x := minX; x <= maxX; x += si.regionSize {
-		for y := minY; y <= maxY; y += si.regionSize {
-			partitionID := si.GetPartitionAt(Point{x, y})
+	// 计算起始和结束的分区坐标
+	startRegionX := minX / PartitionSize
+	startRegionY := minY / PartitionSize
+	endRegionX := maxX / PartitionSize
+	endRegionY := maxY / PartitionSize
+
+	for x := startRegionX; x <= endRegionX; x++ {
+		for y := startRegionY; y <= endRegionY; y++ {
+			partitionID := fmt.Sprintf("region_%d_%d", x, y)
 			partitions[partitionID] = true
 		}
 	}

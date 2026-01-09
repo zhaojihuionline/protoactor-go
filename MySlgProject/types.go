@@ -39,22 +39,22 @@ func (r Rectangle) String() string {
 // Contains 检查点是否在矩形内
 func (r Rectangle) Contains(p Point) bool {
 	return p.X >= r.X && p.X < r.X+r.Width &&
-		   p.Y >= r.Y && p.Y < r.Y+r.Height
+		p.Y >= r.Y && p.Y < r.Y+r.Height
 }
 
 // Intersects 检查两个矩形是否相交
 func (r Rectangle) Intersects(other Rectangle) bool {
 	return !(r.X+r.Width <= other.X || other.X+other.Width <= r.X ||
-			 r.Y+r.Height <= other.Y || other.Y+other.Height <= r.Y)
+		r.Y+r.Height <= other.Y || other.Y+other.Height <= r.Y)
 }
 
 // GridState 格子状态
 type GridState struct {
 	Position   Point
-	Terrain    TerrainType  // 地形类型
-	Resource   *Resource    // 资源
-	Building   *Building    // 建筑
-	Occupants  []*Entity    // 占用者
+	Terrain    TerrainType // 地形类型
+	Resource   *Resource   // 资源
+	Building   *Building   // 建筑
+	Occupants  []*Entity   // 占用者
 	LastUpdate time.Time
 	Version    int64
 }
@@ -72,9 +72,9 @@ const (
 
 // Resource 资源
 type Resource struct {
-	Type     ResourceType
-	Amount   int
-	RegenRate int // 每分钟恢复量
+	Type        ResourceType
+	Amount      int
+	RegenRate   int // 每分钟恢复量
 	LastHarvest time.Time
 }
 
@@ -90,13 +90,13 @@ const (
 
 // Building 建筑
 type Building struct {
-	ID       string
-	Type     BuildingType
-	OwnerID  string
-	Level    int
-	Health   int
+	ID        string
+	Type      BuildingType
+	OwnerID   string
+	Level     int
+	Health    int
 	MaxHealth int
-	Created  time.Time
+	Created   time.Time
 }
 
 // BuildingType 建筑类型
@@ -207,51 +207,4 @@ type PartitionMetrics struct {
 	MemoryUsage     float64
 	AvgResponseTime time.Duration
 	LastUpdate      time.Time
-}
-
-// LoadThresholds 负载阈值
-type LoadThresholds struct {
-	MaxPlayersPerPartition int
-	MinPlayersPerPartition int
-	MaxMessageRate         float64
-	MinMessageRate         float64
-	MaxCpuUsage            float64
-	MinCpuUsage            float64
-	MaxMemoryUsage         float64
-	AdjustmentCooldown     time.Duration
-}
-
-// AdjustmentAction 调整动作
-type AdjustmentAction int
-
-const (
-	ActionSplit AdjustmentAction = iota
-	ActionMerge
-	ActionResize
-)
-
-// AdjustmentPlan 调整计划
-type AdjustmentPlan struct {
-	PartitionID        string
-	Action             AdjustmentAction
-	NewSize            int
-	AffectedPartitions []string
-	Priority           int
-	EstimatedCost      time.Duration
-}
-
-// VersionVector 版本向量
-type VersionVector struct {
-	PartitionVersions map[string]int64
-	Timestamp         time.Time
-}
-
-// MigrationTask 迁移任务
-type MigrationTask struct {
-	EntityID         string
-	SourcePartition  string
-	TargetPartition  string
-	Entity           Entity
-	State            interface{}
-	Priority         int
 }

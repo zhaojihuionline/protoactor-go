@@ -18,7 +18,6 @@ type StateSyncManager struct {
 	batchTimeout   time.Duration
 	mutex          sync.RWMutex
 	system         *actor.ActorSystem
-	versionVector  *VersionVector
 }
 
 // SyncSubscriber 同步订阅者
@@ -50,17 +49,13 @@ func NewStateSyncManager(partitionMgr *PartitionManager, system *actor.ActorSyst
 	batchSize int, batchTimeout time.Duration) *StateSyncManager {
 
 	sm := &StateSyncManager{
-		partitionMgr:  partitionMgr,
-		eventStream:   system.EventStream,
-		subscribers:   make(map[string][]*SyncSubscriber),
-		changeQueue:   make(chan *StateChange, 10000),
-		batchSize:     batchSize,
-		batchTimeout:  batchTimeout,
-		system:        system,
-		versionVector: &VersionVector{
-			PartitionVersions: make(map[string]int64),
-			Timestamp:         time.Now(),
-		},
+		partitionMgr: partitionMgr,
+		eventStream:  system.EventStream,
+		subscribers:  make(map[string][]*SyncSubscriber),
+		changeQueue:  make(chan *StateChange, 10000),
+		batchSize:    batchSize,
+		batchTimeout: batchTimeout,
+		system:       system,
 	}
 
 	// 订阅分区状态变更事件
@@ -129,8 +124,8 @@ func (sm *StateSyncManager) PublishChange(change *StateChange) {
 
 // GetStateSnapshot 获取状态快照
 func (sm *StateSyncManager) GetStateSnapshot(partitionID string, sinceVersion int64) []*StateChange {
-	partition, exists := sm.partitionMgr.GetPartition(partitionID)
-	if !exists {
+	partition := sm.partitionMgr.GetPartition(partitionID)
+	if partition == nil {
 		return nil
 	}
 
@@ -291,49 +286,6 @@ func (sm *StateSyncManager) subscribeToPartitionEvents() {
 	)
 }
 
-// GetVersionVector 获取版本向量
-func (sm *StateSyncManager) GetVersionVector() *VersionVector {
-	sm.mutex.RLock()
-	defer sm.mutex.RUnlock()
-
-	// 返回副本
-	vector := &VersionVector{
-		PartitionVersions: make(map[string]int64),
-		Timestamp:         sm.versionVector.Timestamp,
-	}
-
-	for k, v := range sm.versionVector.PartitionVersions {
-		vector.PartitionVersions[k] = v
-	}
-
-	return vector
-}
-
-// UpdateVersionVector 更新版本向量
-func (sm *StateSyncManager) UpdateVersionVector(partitionID string, version int64) {
-	sm.mutex.Lock()
-	defer sm.mutex.Unlock()
-
-	sm.versionVector.PartitionVersions[partitionID] = version
-	sm.versionVector.Timestamp = time.Now()
-}
-
-// CheckConsistency 检查一致性
-func (sm *StateSyncManager) CheckConsistency(otherVector *VersionVector) bool {
-	sm.mutex.RLock()
-	defer sm.mutex.RUnlock()
-
-	// 简单的向量时钟一致性检查
-	for partitionID, localVersion := range sm.versionVector.PartitionVersions {
-		if otherVersion, exists := otherVector.PartitionVersions[partitionID]; exists {
-			if localVersion != otherVersion {
-				return false
-			}
-		}
-	}
-
-	return true
-}
 
 // GetSyncStats 获取同步统计
 func (sm *StateSyncManager) GetSyncStats() map[string]interface{} {

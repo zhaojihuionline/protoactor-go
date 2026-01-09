@@ -186,7 +186,7 @@ func (aoi *AOIManager) unsubscribePartition(partitionID string) {
 	aoi.subMutex.Lock()
 	defer aoi.subMutex.Unlock()
 
-	if _, exists := aoi.subscriptions[partitionID]; exists {
+	if subscription, exists := aoi.subscriptions[partitionID]; exists {
 		delete(aoi.subscriptions, partitionID)
 
 		// 通知分区管理器
@@ -252,7 +252,7 @@ func (aoi *AOIManager) CleanupExpiredCache() {
 	defer aoi.cacheMutex.Unlock()
 
 	now := time.Now()
-	for key := range aoi.stateCache {
+	for key, state := range aoi.stateCache {
 		// 这里可以根据状态的时间戳判断是否过期
 		// 暂时清理超过5分钟未访问的缓存
 		if now.Sub(aoi.lastUpdate) > 5*time.Minute {

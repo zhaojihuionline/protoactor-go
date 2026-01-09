@@ -8,7 +8,6 @@ import (
 type Config struct {
 	World WorldConfig
 	AOI   AOIConfig
-	Partition PartitionConfig
 	Performance PerformanceConfig
 }
 
@@ -26,15 +25,6 @@ type AOIConfig struct {
 	CacheExpiration time.Duration // 缓存过期时间
 }
 
-// PartitionConfig 分区配置
-type PartitionConfig struct {
-	DefaultSize       int           // 默认分区大小
-	MinSize           int           // 最小分区大小
-	MaxSize           int           // 最大分区大小
-	MonitorInterval   time.Duration // 监控间隔
-	AdjustmentCooldown time.Duration // 调整冷却时间
-	LoadThresholds    LoadThresholds
-}
 
 // PerformanceConfig 性能配置
 type PerformanceConfig struct {
@@ -43,6 +33,13 @@ type PerformanceConfig struct {
 	StateSyncBatchSize  int
 	MetricsCollectInterval time.Duration
 }
+
+// 分区常量配置
+const (
+	PartitionSize     = 100 // 每个分区的大小
+	PartitionsPerRow  = 12  // 每行分区数 (1200/100)
+	TotalPartitions   = 144 // 总分区数 (12*12)
+)
 
 // DefaultConfig 默认配置
 func DefaultConfig() *Config {
@@ -56,23 +53,6 @@ func DefaultConfig() *Config {
 			UpdateInterval:  time.Second * 1,
 			BatchSize:       100,
 			CacheExpiration: time.Minute * 5,
-		},
-		Partition: PartitionConfig{
-			DefaultSize:        100,
-			MinSize:           50,
-			MaxSize:           200,
-			MonitorInterval:   time.Second * 30,
-			AdjustmentCooldown: time.Minute * 5,
-			LoadThresholds: LoadThresholds{
-				MaxPlayersPerPartition: 500,
-				MinPlayersPerPartition: 20,
-				MaxMessageRate:         10000,
-				MinMessageRate:         100,
-				MaxCpuUsage:            0.8,
-				MinCpuUsage:            0.1,
-				MaxMemoryUsage:         0.85,
-				AdjustmentCooldown:     time.Minute * 5,
-			},
 		},
 		Performance: PerformanceConfig{
 			MaxMessageQueueSize: 10000,

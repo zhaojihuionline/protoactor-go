@@ -11,48 +11,43 @@ import (
 
 // GameWorld 游戏世界管理器
 type GameWorld struct {
-	system         *actor.ActorSystem
-	config         *Config
+	system *actor.ActorSystem
+	config *Config
 
 	// 核心组件
-	spatialIndex   *SpatialIndex
-	partitionMgr   *PartitionManager
-	entityMgr      *EntityManager
-	eventSystem    *EventSystem
-	stateSyncMgr   *StateSyncManager
-
-	// 动态分区管理
-	loadBalancer   *LoadBalancer
-	partitionAdjuster *PartitionAdjuster
-	metricsCollector *MetricsCollector
+	spatialIndex *SpatialIndex
+	partitionMgr *PartitionManager
+	entityMgr    *EntityManager
+	eventSystem  *EventSystem
+	stateSyncMgr *StateSyncManager
 
 	// 玩家和AOI管理
 	playerAOIManagers map[string]*AOIManager
 	playerSubscribers map[string]*AOISubscriber
 
 	// 世界状态
-	isRunning      bool
-	startTime      time.Time
-	lastUpdate     time.Time
-	updateMutex    sync.RWMutex
+	isRunning   bool
+	startTime   time.Time
+	lastUpdate  time.Time
+	updateMutex sync.RWMutex
 
 	// 统计信息
-	stats          WorldStats
+	stats WorldStats
 }
 
 // WorldStats 世界统计信息
 type WorldStats struct {
-	TotalPlayers   int
-	TotalEntities  int
+	TotalPlayers    int
+	TotalEntities   int
 	TotalPartitions int
-	Uptime         time.Duration
-	LastUpdate     time.Time
+	Uptime          time.Duration
+	LastUpdate      time.Time
 }
 
 // PartitionManager 分区管理器
 type PartitionManager struct {
-	partitions map[string]*Partition
-	mutex      sync.RWMutex
+	partitions   map[string]*Partition
+	mutex        sync.RWMutex
 	spatialIndex *SpatialIndex
 }
 
@@ -73,27 +68,17 @@ func NewGameWorld(config *Config) *GameWorld {
 	// 设置事件系统引用
 	entityMgr.eventSystem = eventSystem
 
-	// 初始化动态分区管理
-	loadBalancer := NewLoadBalancer(config, system, partitionMgr, nil) // adjuster稍后设置
-	metricsCollector := NewMetricsCollector(partitionMgr, loadBalancer, config.Performance.MetricsCollectInterval)
-
-	partitionAdjuster := NewPartitionAdjuster(config, system, partitionMgr, spatialIndex)
-	loadBalancer.adjuster = partitionAdjuster // 设置adjuster引用
-
 	return &GameWorld{
-		system:           system,
-		config:           config,
-		spatialIndex:     spatialIndex,
-		partitionMgr:     partitionMgr,
-		entityMgr:        entityMgr,
-		eventSystem:      eventSystem,
-		stateSyncMgr:     stateSyncMgr,
-		loadBalancer:     loadBalancer,
-		partitionAdjuster: partitionAdjuster,
-		metricsCollector: metricsCollector,
+		system:            system,
+		config:            config,
+		spatialIndex:      spatialIndex,
+		partitionMgr:      partitionMgr,
+		entityMgr:         entityMgr,
+		eventSystem:       eventSystem,
+		stateSyncMgr:      stateSyncMgr,
 		playerAOIManagers: make(map[string]*AOIManager),
 		playerSubscribers: make(map[string]*AOISubscriber),
-		isRunning:        false,
+		isRunning:         false,
 	}
 }
 
@@ -110,10 +95,6 @@ func (gw *GameWorld) Start() error {
 
 	// 初始化地图分区
 	gw.initializePartitions()
-
-	// 启动监控系统
-	gw.loadBalancer.Start()
-	gw.metricsCollector.Start()
 
 	// 初始化一些测试实体
 	gw.initializeTestEntities()
@@ -140,9 +121,6 @@ func (gw *GameWorld) Stop() error {
 
 	log.Println("Stopping game world...")
 
-	// 停止监控系统
-	gw.loadBalancer.Stop()
-
 	gw.isRunning = false
 	log.Println("Game world stopped")
 	return nil
@@ -150,29 +128,17 @@ func (gw *GameWorld) Stop() error {
 
 // initializePartitions 初始化地图分区
 func (gw *GameWorld) initializePartitions() {
-	partitionSize := gw.config.Partition.DefaultSize
+	// 使用固定的100x100分区，创建12x12=144个分区
 
-	// 计算需要的分区数量
-	cols := (gw.config.World.Width + partitionSize - 1) / partitionSize
-	rows := (gw.config.World.Height + partitionSize - 1) / partitionSize
-
-	for i := 0; i < rows; i++ {
-		for j := 0; j < cols; j++ {
+	for i := 0; i < PartitionsPerRow; i++ {
+		for j := 0; j < PartitionsPerRow; j++ {
 			partitionID := fmt.Sprintf("region_%d_%d", j, i)
 
 			bounds := Rectangle{
-				X:      j * partitionSize,
-				Y:      i * partitionSize,
-				Width:  partitionSize,
-				Height: partitionSize,
-			}
-
-			// 调整最后一个分区的边界
-			if j == cols-1 {
-				bounds.Width = gw.config.World.Width - bounds.X
-			}
-			if i == rows-1 {
-				bounds.Height = gw.config.World.Height - bounds.Y
+				X:      j * PartitionSize,
+				Y:      i * PartitionSize,
+				Width:  PartitionSize,
+				Height: PartitionSize,
 			}
 
 			partition := NewPartition(partitionID, bounds, gw.config, gw.system)
@@ -182,16 +148,16 @@ func (gw *GameWorld) initializePartitions() {
 		}
 	}
 
-	log.Printf("Initialized %d partitions", len(gw.partitionMgr.partitions))
+	log.Printf("Initialized %d fixed partitions (%dx%d grid)", len(gw.partitionMgr.partitions), PartitionsPerRow, PartitionsPerRow)
 }
 
 // initializeTestEntities 初始化测试实体
 func (gw *GameWorld) initializeTestEntities() {
 	// 创建一些测试NPC
 	npcs := []struct {
-		id   string
-		name string
-		pos  Point
+		id      string
+		name    string
+		pos     Point
 		npcType NPCType
 	}{
 		{"npc_001", "村民小明", Point{X: 100, Y: 100}, NPCVillager},
@@ -371,11 +337,10 @@ func (gw *GameWorld) GetWorldStats() WorldStats {
 // GetSystemStats 获取系统统计信息
 func (gw *GameWorld) GetSystemStats() map[string]interface{} {
 	stats := map[string]interface{}{
-		"world": gw.GetWorldStats(),
+		"world":    gw.GetWorldStats(),
 		"entities": gw.entityMgr.GetEntityStats(),
-		"events": gw.eventSystem.GetEventStats(),
-		"sync": gw.stateSyncMgr.GetSyncStats(),
-		"load_balancer": gw.loadBalancer.GetLoadStats(),
+		"events":   gw.eventSystem.GetEventStats(),
+		"sync":     gw.stateSyncMgr.GetSyncStats(),
 	}
 
 	return stats

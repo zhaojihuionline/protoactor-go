@@ -240,7 +240,7 @@ func (ea *EntityActor) handleAttack(ctx actor.Context, cmd *AttackCommand) {
 	// 应用伤害
 	targetPID := ea.getEntityPID(cmd.TargetID)
 	if targetPID != nil {
-		ctx.ActorSystem().Root.Send(targetPID, &DamageTaken{
+		ea.system.Root.Send(targetPID, &DamageTaken{
 			AttackerID: ea.entity.GetID(),
 			Damage:     damage,
 			DamageType: cmd.DamageType,

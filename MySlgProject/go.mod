@@ -1,6 +1,6 @@
 module MySlgProject
 
-go 1.25.5
+go 1.25.2
 
 require github.com/asynkron/protoactor-go v0.0.0
 

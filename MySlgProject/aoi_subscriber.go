@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"sync"
 	"time"
 
@@ -118,7 +117,7 @@ func (sub *AOISubscriber) UpdateSubscription(partitionID string, viewRect Rectan
 	sub.bufferMutex.Lock()
 	defer sub.bufferMutex.Unlock()
 
-	if subscription, exists := sub.subscriptions[partitionID]; exists {
+	if _, exists := sub.subscriptions[partitionID]; exists {
 		oldRect := subscription.ViewRect
 		subscription.ViewRect = viewRect
 		subscription.LastUpdate = time.Now()
@@ -320,9 +319,14 @@ func (sub *AOISubscriber) shouldResync(oldRect, newRect Rectangle) bool {
 
 // requestResync 请求重新同步
 func (sub *AOISubscriber) requestResync(partitionID string) {
+	resyncMsg := &RequestPartitionResync{
+		PlayerID:    sub.playerID,
+		PartitionID: partitionID,
+	}
+
 	if partition, exists := sub.partitionMgr.GetPartition(partitionID); exists {
-		// 直接重新同步分区数据到订阅者
-		sub.resyncPartitionData(partition)
+		// 发送重新同步请求到分区
+		sub.system.Root.Send(partition.ActorPID, resyncMsg)
 	}
 }
 
@@ -337,13 +341,6 @@ type AOIBatchEvent struct {
 type RequestPartitionResync struct {
 	PlayerID    string
 	PartitionID string
-}
-
-// resyncPartitionData 重新同步分区数据到订阅者
-func (sub *AOISubscriber) resyncPartitionData(partition *Partition) {
-	// 这里应该实现重新同步逻辑
-	// 例如：发送分区中的所有实体信息给订阅者
-	// 暂时留空，后续实现
 }
 
 // Errors
