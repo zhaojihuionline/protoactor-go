@@ -231,25 +231,22 @@ func (twe *TimingWheelExample) Monitor() {
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			stats := twe.GetStats()
-			fmt.Printf("\n=== Timing Wheel Stats ===\n")
-			fmt.Printf("Running: %v\n", stats["running"])
-			fmt.Printf("Total Tasks: %v\n", stats["total_tasks"])
-			fmt.Printf("Uptime: %v\n", stats["uptime"])
+	for range ticker.C {
+		stats := twe.GetStats()
+		fmt.Printf("\n=== Timing Wheel Stats ===\n")
+		fmt.Printf("Running: %v\n", stats["running"])
+		fmt.Printf("Total Tasks: %v\n", stats["total_tasks"])
+		fmt.Printf("Uptime: %v\n", stats["uptime"])
 
-			for level := 0; level < 6; level++ {
-				levelNames := []string{"week", "day", "hour", "minute", "second", "millisecond"}
-				if level < len(levelNames) {
-					fmt.Printf("%s: %v tasks, %v ticks\n",
-						levelNames[level],
-						stats[levelNames[level]+"_tasks"],
-						stats[levelNames[level]+"_tick_count"])
-				}
+		for level := 0; level < 6; level++ {
+			levelNames := []string{"week", "day", "hour", "minute", "second", "millisecond"}
+			if level < len(levelNames) {
+				fmt.Printf("%s: %v tasks, %v ticks\n",
+					levelNames[level],
+					stats[levelNames[level]+"_tasks"],
+					stats[levelNames[level]+"_tick_count"])
 			}
-			fmt.Printf("========================\n")
 		}
+		fmt.Printf("========================\n")
 	}
 }
