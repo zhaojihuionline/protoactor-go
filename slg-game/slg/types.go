@@ -1,4 +1,4 @@
-package main
+package slg
 
 /*
 	公共类型定义
