@@ -19,22 +19,22 @@ type PlayerActor struct {
 	CurPosition          bmap.Position
 	CurScale             float64
 	CurLayerNumber       bmap.LayerNumber
-	CurAOIPartions       map[bmap.LayerNumber]map[*actor.PID]bool
+	CurAOIPartions       map[bmap.LayerNumber]map[utils.BigmapCoord]bool
 	LastAOICache         *bmap.AOICache
 	LastLayerEntityCache map[bmap.LayerNumber]*map[bmap.EntityID]*bmap.Entity
-	PartitionPIDs        map[int64]*actor.PID
+	PartitionPIDs        map[utils.BigmapCoord]*actor.PID
 }
 
-func NewPlayerActor(name string, partitionPIDs map[int64]*actor.PID) *PlayerActor {
+func NewPlayerActor(name string, partitionPIDs map[utils.BigmapCoord]*actor.PID) *PlayerActor {
 	return &PlayerActor{
 		Name:           name,
-		CurAOIPartions: make(map[bmap.LayerNumber]map[*actor.PID]bool),
+		CurAOIPartions: make(map[bmap.LayerNumber]map[utils.BigmapCoord]bool),
 		PartitionPIDs:  partitionPIDs,
 	}
 }
 
 // computePartitionsForAOI 计算视野范围内可能涉及的分区ID列表
-func computePartitionsForAOI(center bmap.Position, view bmap.View) []int64 {
+func computePartitionsForAOI(center bmap.Position, view bmap.View) []utils.BigmapCoord {
 	halfW := float64(view.W) / 2
 	halfH := float64(view.H) / 2
 
@@ -52,10 +52,10 @@ func computePartitionsForAOI(center bmap.Position, view bmap.View) []int64 {
 	pyMin := int(math.Max(0, math.Floor(minY/PARTITION_HEIGHT)))
 	pyMax := int(math.Min(float64(partitionsPerCol-1), math.Floor(maxY/PARTITION_HEIGHT)))
 
-	var partitions []int64
+	var partitions []utils.BigmapCoord
 	for py := pyMin; py <= pyMax; py++ {
 		for px := pxMin; px <= pxMax; px++ {
-			partitionID := int64(utils.EncodeCoord(px, py))
+			partitionID := utils.EncodeCoord(px, py)
 			partitions = append(partitions, partitionID)
 		}
 	}
@@ -64,7 +64,7 @@ func computePartitionsForAOI(center bmap.Position, view bmap.View) []int64 {
 }
 
 // partitionBounds 根据分区ID计算分区边界 (minX, minY, maxX, maxY)
-func partitionBounds(partitionID int64) (float64, float64, float64, float64) {
+func partitionBounds(partitionID utils.BigmapCoord) (float64, float64, float64, float64) {
 	return GetPartitionBounds(partitionID)
 }
 
@@ -76,10 +76,10 @@ func rectsIntersect(aMinX, aMinY, aMaxX, aMaxY, bMinX, bMinY, bMaxX, bMaxY float
 // ensureCurAOIMap 确保当前层的AOI分区映射存在
 func (a *PlayerActor) ensureCurAOIMap(layer bmap.LayerNumber) {
 	if a.CurAOIPartions == nil {
-		a.CurAOIPartions = make(map[bmap.LayerNumber]map[*actor.PID]bool)
+		a.CurAOIPartions = make(map[bmap.LayerNumber]map[utils.BigmapCoord]bool)
 	}
 	if _, ok := a.CurAOIPartions[layer]; !ok {
-		a.CurAOIPartions[layer] = make(map[*actor.PID]bool)
+		a.CurAOIPartions[layer] = make(map[utils.BigmapCoord]bool)
 	}
 }
 
@@ -100,31 +100,32 @@ func (a *PlayerActor) handleAOIUpdate(context actor.Context, layer bmap.LayerNum
 	a.ensureCurAOIMap(layer)
 	current := a.CurAOIPartions[layer]
 
-	// 计算新的订阅集合
-	newSet := make(map[*actor.PID]bool)
+	// 计算新的订阅集合 (基于分区ID)
+	newSubscribed := make(map[utils.BigmapCoord]bool)
 	for _, partitionID := range possible {
-		pid := a.PartitionPIDs[partitionID]
-		if pid == nil {
-			continue
-		}
-
 		// 检查AOI与分区空间相交
 		partMinX, partMinY, partMaxX, partMaxY := partitionBounds(partitionID)
 		if rectsIntersect(aoiMinX, aoiMinY, aoiMaxX, aoiMaxY, partMinX, partMinY, partMaxX, partMaxY) {
-			newSet[pid] = true
+			newSubscribed[partitionID] = true
 			// 如果当前没有订阅，发送订阅消息
-			if !current[pid] {
-				context.Send(pid, &bmap.SubscribePlayer{Layer: layer, PID: context.Self()})
-				current[pid] = true
+			if !current[partitionID] {
+				pid := a.PartitionPIDs[partitionID]
+				if pid != nil {
+					context.Send(pid, &bmap.SubscribePlayer{Layer: layer, PID: context.Self()})
+					current[partitionID] = true
+				}
 			}
 		}
 	}
 
 	// 取消不再需要的订阅
-	for pid := range current {
-		if !newSet[pid] {
-			context.Send(pid, &bmap.UnsubscribePlayer{Layer: layer, PID: context.Self()})
-			delete(current, pid)
+	for partitionID := range current {
+		if !newSubscribed[partitionID] {
+			pid := a.PartitionPIDs[partitionID]
+			if pid != nil {
+				context.Send(pid, &bmap.UnsubscribePlayer{Layer: layer, PID: context.Self()})
+			}
+			delete(current, partitionID)
 		}
 	}
 }
@@ -165,8 +166,11 @@ func (a *PlayerActor) Receive(context actor.Context) {
 	case *bmap.LeaveMap:
 		fmt.Printf("PlayerActor leaving map at layer %d\n", msg.Layer)
 		if layerMap, ok := a.CurAOIPartions[msg.Layer]; ok {
-			for pid := range layerMap {
-				context.Send(pid, &bmap.UnsubscribePlayer{Layer: msg.Layer, PID: context.Self()})
+			for partitionID := range layerMap {
+				pid := a.PartitionPIDs[partitionID]
+				if pid != nil {
+					context.Send(pid, &bmap.UnsubscribePlayer{Layer: msg.Layer, PID: context.Self()})
+				}
 			}
 			delete(a.CurAOIPartions, msg.Layer)
 		}

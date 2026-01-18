@@ -37,8 +37,8 @@ const (
 )
 
 type Position struct {
-	X float64
-	Y float64
+	X int32
+	Y int32
 }
 
 type View struct {
@@ -63,8 +63,8 @@ type Grid struct {
 }
 
 type AOICache struct {
-	Entities  map[int64]*Entity
-	Grids     map[int64]*Grid
+	Entities  map[int32]*Entity
+	Grids     map[int32]*Grid
 	Timestamp time.Time
 }
 

@@ -35,9 +35,8 @@ func GetPartitionCounts() (perRow, perCol int) {
 }
 
 // GetPartitionBounds 根据分区ID获取分区边界坐标
-func GetPartitionBounds(partitionID int64) (minX, minY, maxX, maxY float64) {
-	coord := utils.BigmapCoord(partitionID)
-	px, py := coord.X(), coord.Y()
+func GetPartitionBounds(partitionID utils.BigmapCoord) (minX, minY, maxX, maxY float64) {
+	px, py := partitionID.X(), partitionID.Y()
 	minX = float64(px) * PARTITION_WIDTH
 	minY = float64(py) * PARTITION_HEIGHT
 	maxX = minX + PARTITION_WIDTH
@@ -47,37 +46,37 @@ func GetPartitionBounds(partitionID int64) (minX, minY, maxX, maxY float64) {
 
 // PartitionManager 分区管理器，管理分区ID到PID的映射
 type PartitionManager struct {
-	partitionPIDs map[int64]*actor.PID
-	pidToID       map[*actor.PID]int64
+	partitionPIDs map[utils.BigmapCoord]*actor.PID
+	pidToID       map[*actor.PID]utils.BigmapCoord
 }
 
 // NewPartitionManager 创建新的分区管理器
 func NewPartitionManager() *PartitionManager {
 	return &PartitionManager{
-		partitionPIDs: make(map[int64]*actor.PID),
-		pidToID:       make(map[*actor.PID]int64),
+		partitionPIDs: make(map[utils.BigmapCoord]*actor.PID),
+		pidToID:       make(map[*actor.PID]utils.BigmapCoord),
 	}
 }
 
 // RegisterPartition 注册分区
-func (pm *PartitionManager) RegisterPartition(partitionID int64, pid *actor.PID) {
+func (pm *PartitionManager) RegisterPartition(partitionID utils.BigmapCoord, pid *actor.PID) {
 	pm.partitionPIDs[partitionID] = pid
 	pm.pidToID[pid] = partitionID
 }
 
 // GetPartitionPID 根据分区ID获取分区PID
-func (pm *PartitionManager) GetPartitionPID(partitionID int64) *actor.PID {
+func (pm *PartitionManager) GetPartitionPID(partitionID utils.BigmapCoord) *actor.PID {
 	return pm.partitionPIDs[partitionID]
 }
 
 // GetPartitionIDByPID 根据PID获取分区ID
-func (pm *PartitionManager) GetPartitionIDByPID(pid *actor.PID) int64 {
+func (pm *PartitionManager) GetPartitionIDByPID(pid *actor.PID) utils.BigmapCoord {
 	if id, exists := pm.pidToID[pid]; exists {
 		return id
 	}
 	return -1 // 无效ID
 }
 
-func (pm *PartitionManager) GetPartionPIDs() map[int64]*actor.PID {
+func (pm *PartitionManager) GetPartionPIDs() map[utils.BigmapCoord]*actor.PID {
 	return pm.partitionPIDs
 }

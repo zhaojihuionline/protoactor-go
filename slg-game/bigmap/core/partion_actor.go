@@ -13,14 +13,14 @@ import (
 
 type PartionActor struct {
 	actor.Actor
-	ID            int64
+	Position      bmap.Position
 	CurAOIPlayers map[bmap.LayerNumber]map[*actor.PID]bool
 }
 
 func (a *PartionActor) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
 	case *actor.Started:
-		fmt.Printf("PartionActor %d started\n", a.ID)
+		fmt.Printf("PartionActor %s started\n", context.Self().Id)
 		if a.CurAOIPlayers == nil {
 			a.CurAOIPlayers = make(map[bmap.LayerNumber]map[*actor.PID]bool)
 		}
@@ -47,7 +47,7 @@ func (a *PartionActor) Receive(context actor.Context) {
 			a.CurAOIPlayers[msg.Layer] = make(map[*actor.PID]bool)
 		}
 		a.CurAOIPlayers[msg.Layer][msg.PID] = true
-		fmt.Printf("PartionActor %d: subscribed player %s on layer %d\n", a.ID, msg.PID.String(), msg.Layer)
+		fmt.Printf("PartionActor %s: subscribed player %s on layer %d\n", context.Self().Id, msg.PID.String(), msg.Layer)
 
 	case *bmap.UnsubscribePlayer:
 		if layerPlayers, ok := a.CurAOIPlayers[msg.Layer]; ok {
@@ -56,6 +56,6 @@ func (a *PartionActor) Receive(context actor.Context) {
 				delete(a.CurAOIPlayers, msg.Layer)
 			}
 		}
-		fmt.Printf("PartionActor %d: unsubscribed player %s on layer %d\n", a.ID, msg.PID.String(), msg.Layer)
+		fmt.Printf("PartionActor %s: unsubscribed player %s on layer %d\n", context.Self().Id, msg.PID.String(), msg.Layer)
 	}
 }

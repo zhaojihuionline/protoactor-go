@@ -6,6 +6,7 @@ import (
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/asynkron/protoactor-go/slg-game/bigmap/core"
 	"github.com/asynkron/protoactor-go/slg-game/bigmap/logic"
+	"github.com/asynkron/protoactor-go/slg-game/domain/bmap"
 	"github.com/asynkron/protoactor-go/slg-game/utils"
 )
 
@@ -52,9 +53,9 @@ func InitializePartitions(system *actor.ActorSystem) *core.PartitionManager {
 			partitionIndexX := mapX / core.PARTITION_WIDTH
 			partitionIndexY := mapY / core.PARTITION_HEIGHT
 
-			partitionID := int64(utils.EncodeCoord(partitionIndexX, partitionIndexY))
+			partitionID := utils.EncodeCoord(partitionIndexX, partitionIndexY)
 			props := actor.PropsFromProducer(func() actor.Actor {
-				return &core.PartionActor{ID: partitionID}
+				return &core.PartionActor{Position: bmap.Position{X: int32(partitionIndexX), Y: int32(partitionIndexY)}}
 			})
 
 			pid, err := system.Root.SpawnNamed(props, fmt.Sprintf("partition-%d-%d", mapX, mapY))
