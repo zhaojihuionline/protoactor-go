@@ -4,7 +4,11 @@ package bmap
 	公共类型定义
 */
 
-import "time"
+import (
+	"time"
+
+	"github.com/asynkron/protoactor-go/actor"
+)
 
 type LayerNumber int32
 
@@ -62,4 +66,37 @@ type AOICache struct {
 	Entities  map[int64]*Entity
 	Grids     map[int64]*Grid
 	Timestamp time.Time
+}
+
+// 消息类型定义
+
+// EnterMap 进入大地图消息
+type EnterMap struct {
+	Layer  LayerNumber
+	Center Position
+	View   View
+}
+
+// MoveView 视野移动消息
+type MoveView struct {
+	Layer  LayerNumber
+	Center Position
+	View   View
+}
+
+// LeaveMap 离开大地图消息
+type LeaveMap struct {
+	Layer LayerNumber
+}
+
+// SubscribePlayer 订阅玩家消息（发送给PartionActor）
+type SubscribePlayer struct {
+	Layer LayerNumber
+	PID   *actor.PID
+}
+
+// UnsubscribePlayer 取消订阅玩家消息（发送给PartionActor）
+type UnsubscribePlayer struct {
+	Layer LayerNumber
+	PID   *actor.PID
 }

@@ -15,12 +15,17 @@ type PartionActor struct {
 	actor.Actor
 	ID            int64
 	CurAOIPlayers map[bmap.LayerNumber]map[*actor.PID]bool
+	// Bounds: left-bottom position and size are derivable from ID (not stored here),
+	// PartionActor only needs to maintain subscribed players.
 }
 
 func (a *PartionActor) Receive(context actor.Context) {
-	switch context.Message().(type) {
+	switch msg := context.Message().(type) {
 	case *actor.Started:
-		fmt.Println("PartionActor started")
+		fmt.Printf("PartionActor %d started\n", a.ID)
+		if a.CurAOIPlayers == nil {
+			a.CurAOIPlayers = make(map[bmap.LayerNumber]map[*actor.PID]bool)
+		}
 	case *actor.Stopping:
 		fmt.Println("PartionActor stopping")
 	case *actor.Stopped:
@@ -37,5 +42,22 @@ func (a *PartionActor) Receive(context actor.Context) {
 		fmt.Println("PartionActor received watch message")
 	case *actor.Unwatch:
 		fmt.Println("PartionActor received unwatch message")
+
+	// 订阅/退订处理（来自 PlayerActor）
+	case *bmap.SubscribePlayer:
+		if a.CurAOIPlayers[msg.Layer] == nil {
+			a.CurAOIPlayers[msg.Layer] = make(map[*actor.PID]bool)
+		}
+		a.CurAOIPlayers[msg.Layer][msg.PID] = true
+		fmt.Printf("PartionActor %d: subscribed player %s on layer %d\n", a.ID, msg.PID.String(), msg.Layer)
+
+	case *bmap.UnsubscribePlayer:
+		if layerPlayers, ok := a.CurAOIPlayers[msg.Layer]; ok {
+			delete(layerPlayers, msg.PID)
+			if len(layerPlayers) == 0 {
+				delete(a.CurAOIPlayers, msg.Layer)
+			}
+		}
+		fmt.Printf("PartionActor %d: unsubscribed player %s on layer %d\n", a.ID, msg.PID.String(), msg.Layer)
 	}
 }
