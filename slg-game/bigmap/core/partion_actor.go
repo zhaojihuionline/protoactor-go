@@ -15,8 +15,6 @@ type PartionActor struct {
 	actor.Actor
 	ID            int64
 	CurAOIPlayers map[bmap.LayerNumber]map[*actor.PID]bool
-	// Bounds: left-bottom position and size are derivable from ID (not stored here),
-	// PartionActor only needs to maintain subscribed players.
 }
 
 func (a *PartionActor) Receive(context actor.Context) {
