@@ -5,8 +5,7 @@ import (
 	"time"
 
 	"github.com/asynkron/protoactor-go/actor"
-	"github.com/asynkron/protoactor-go/slg-game/bigmap/core"
-	"github.com/asynkron/protoactor-go/slg-game/bigmap/logic"
+	slg "github.com/asynkron/protoactor-go/slg-game/bigmap"
 	"github.com/asynkron/protoactor-go/slg-game/domain/bmap"
 )
 
@@ -14,25 +13,9 @@ func main() {
 	// 创建actor系统
 	system := actor.NewActorSystem()
 
-	// 初始化144个分区actor (12x12 = 144)
-	partitionPIDs := make(map[int64]*actor.PID)
-	for i := 0; i < 144; i++ {
-		partitionID := int64(i)
-		props := actor.PropsFromProducer(func() actor.Actor {
-			return &core.PartionActor{ID: partitionID}
-		})
-
-		pid, err := system.Root.SpawnNamed(props, fmt.Sprintf("partition-%d", partitionID))
-		if err != nil {
-			panic(fmt.Sprintf("Failed to spawn partition actor %d: %v", partitionID, err))
-		}
-
-		partitionPIDs[partitionID] = pid
-		fmt.Printf("Created partition %d\n", partitionID)
-	}
-
-	// 创建游戏世界（包含PlayerManager）
-	gameWorld := logic.NewGameWorld(system, partitionPIDs)
+	// 创建大地图服务器（包含分区初始化和游戏世界）
+	server := slg.NewServer(system)
+	gameWorld := server.GetGameWorld()
 
 	// 演示业务接口使用
 	playerID := "player1"
