@@ -6,7 +6,6 @@ package core
 
 import (
 	"fmt"
-	"math"
 
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/asynkron/protoactor-go/slg-game/domain/bmap"
@@ -35,41 +34,38 @@ func NewPlayerActor(name string, partitionPIDs map[utils.BigmapCoord]*actor.PID)
 
 // computePartitionsForAOI 计算视野范围内可能涉及的分区ID列表
 func computePartitionsForAOI(center bmap.Position, view bmap.View) []utils.BigmapCoord {
-	halfW := float64(view.W) / 2
-	halfH := float64(view.H) / 2
+	// view.H 屏幕中心格子坐标的上下方的格子数
+	// view.W 屏幕中心格子坐标的左右方的格子数
 
-	minX := center.X - halfW
-	maxX := center.X + halfW
-	minY := center.Y - halfH
-	maxY := center.Y + halfH
+	// AOI格子
+	minX := center.X - view.W
+	maxX := center.X + view.W
+	minY := center.Y - view.H
+	maxY := center.Y + view.H
 
-	// 获取分区行列数量
-	partitionsPerRow, partitionsPerCol := GetPartitionCounts()
+	// 分区索引范围计算（整数运算）
+	pxMin := max(0, minX/PARTITION_WIDTH)
+	pxMax := min(MAP_WIDTH/PARTITION_WIDTH-1, maxX/PARTITION_WIDTH)
+	pyMin := max(0, minY/PARTITION_HEIGHT)
+	pyMax := min(MAP_HEIGHT/PARTITION_HEIGHT-1, maxY/PARTITION_HEIGHT)
 
-	// 计算分区范围，限制在地图边界内
-	pxMin := int(math.Max(0, math.Floor(minX/PARTITION_WIDTH)))
-	pxMax := int(math.Min(float64(partitionsPerRow-1), math.Floor(maxX/PARTITION_WIDTH)))
-	pyMin := int(math.Max(0, math.Floor(minY/PARTITION_HEIGHT)))
-	pyMax := int(math.Min(float64(partitionsPerCol-1), math.Floor(maxY/PARTITION_HEIGHT)))
-
+	// 生成分区列表
 	var partitions []utils.BigmapCoord
 	for py := pyMin; py <= pyMax; py++ {
 		for px := pxMin; px <= pxMax; px++ {
-			partitionID := utils.EncodeCoord(px, py)
-			partitions = append(partitions, partitionID)
+			partitions = append(partitions, utils.EncodeCoord(px, py))
 		}
 	}
-
 	return partitions
 }
 
 // partitionBounds 根据分区ID计算分区边界 (minX, minY, maxX, maxY)
-func partitionBounds(partitionID utils.BigmapCoord) (float64, float64, float64, float64) {
+func partitionBounds(partitionID utils.BigmapCoord) (int32, int32, int32, int32) {
 	return GetPartitionBounds(partitionID)
 }
 
 // rectsIntersect 检查两个矩形是否相交
-func rectsIntersect(aMinX, aMinY, aMaxX, aMaxY, bMinX, bMinY, bMaxX, bMaxY float64) bool {
+func rectsIntersect(aMinX, aMinY, aMaxX, aMaxY, bMinX, bMinY, bMaxX, bMaxY int32) bool {
 	return !(aMaxX < bMinX || aMinX > bMaxX || aMaxY < bMinY || aMinY > bMaxY)
 }
 
@@ -89,12 +85,10 @@ func (a *PlayerActor) handleAOIUpdate(context actor.Context, layer bmap.LayerNum
 	possible := computePartitionsForAOI(center, view)
 
 	// 计算AOI矩形边界
-	halfW := float64(view.W) / 2
-	halfH := float64(view.H) / 2
-	aoiMinX := center.X - halfW
-	aoiMaxX := center.X + halfW
-	aoiMinY := center.Y - halfH
-	aoiMaxY := center.Y + halfH
+	aoiMinX := center.X - view.W
+	aoiMaxX := center.X + view.W
+	aoiMinY := center.Y - view.H
+	aoiMaxY := center.Y + view.H
 
 	// 确保当前层映射存在
 	a.ensureCurAOIMap(layer)
@@ -152,14 +146,14 @@ func (a *PlayerActor) Receive(context actor.Context) {
 		fmt.Println("PlayerActor received unwatch message")
 
 	case *bmap.EnterMap:
-		fmt.Printf("PlayerActor entering map at layer %d, position (%f, %f)\n", msg.Layer, msg.Center.X, msg.Center.Y)
+		fmt.Printf("PlayerActor entering map at layer %d, position (%d, %d)\n", msg.Layer, msg.Center.X, msg.Center.Y)
 		a.CurLayerNumber = msg.Layer
 		a.CurPosition = msg.Center
 		a.ensureCurAOIMap(msg.Layer)
 		a.handleAOIUpdate(context, msg.Layer, msg.Center, msg.View)
 
 	case *bmap.MoveView:
-		fmt.Printf("PlayerActor moving view at layer %d, position (%f, %f)\n", msg.Layer, msg.Center.X, msg.Center.Y)
+		fmt.Printf("PlayerActor moving view at layer %d, position (%d, %d)\n", msg.Layer, msg.Center.X, msg.Center.Y)
 		a.CurPosition = msg.Center
 		a.handleAOIUpdate(context, msg.Layer, msg.Center, msg.View)
 

@@ -35,10 +35,10 @@ func GetPartitionCounts() (perRow, perCol int) {
 }
 
 // GetPartitionBounds 根据分区ID获取分区边界坐标
-func GetPartitionBounds(partitionID utils.BigmapCoord) (minX, minY, maxX, maxY float64) {
+func GetPartitionBounds(partitionID utils.BigmapCoord) (minX, minY, maxX, maxY int32) {
 	px, py := partitionID.X(), partitionID.Y()
-	minX = float64(px) * PARTITION_WIDTH
-	minY = float64(py) * PARTITION_HEIGHT
+	minX = px * PARTITION_WIDTH
+	minY = py * PARTITION_HEIGHT
 	maxX = minX + PARTITION_WIDTH
 	maxY = minY + PARTITION_HEIGHT
 	return

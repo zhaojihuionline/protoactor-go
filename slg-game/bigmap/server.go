@@ -47,8 +47,8 @@ func InitializePartitions(system *actor.ActorSystem) *core.PartitionManager {
 		core.MAP_WIDTH, core.MAP_HEIGHT, core.PARTITION_WIDTH, core.PARTITION_HEIGHT)
 
 	// 创建分区，按照地图坐标顺序 (0,0), (100,0), (200,0), ... 到 (1100,1100)
-	for mapY := 0; mapY < core.MAP_HEIGHT; mapY += core.PARTITION_HEIGHT {
-		for mapX := 0; mapX < core.MAP_WIDTH; mapX += core.PARTITION_WIDTH {
+	for mapY := int32(0); mapY < core.MAP_HEIGHT; mapY += core.PARTITION_HEIGHT {
+		for mapX := int32(0); mapX < core.MAP_WIDTH; mapX += core.PARTITION_WIDTH {
 			// 计算分区索引用于编码
 			partitionIndexX := mapX / core.PARTITION_WIDTH
 			partitionIndexY := mapY / core.PARTITION_HEIGHT

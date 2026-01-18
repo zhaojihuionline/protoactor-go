@@ -28,8 +28,8 @@ func ExampleBigmapCoordUsage() {
 
 	// 坐标运算示例
 	fmt.Println("\n=== 坐标运算示例 ===")
-	for y := 0; y < 3; y++ {
-		for x := 0; x < 3; x++ {
+	for y := int32(0); y < 3; y++ {
+		for x := int32(0); x < 3; x++ {
 			coord := EncodeCoord(x*100, y*100)
 			fmt.Printf("%s ", coord.String())
 		}

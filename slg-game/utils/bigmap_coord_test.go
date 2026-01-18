@@ -7,7 +7,7 @@ import (
 func TestBigmapCoord(t *testing.T) {
 	// 测试编码解码
 	testCases := []struct {
-		x, y int
+		x, y int32
 	}{
 		{0, 0},
 		{1, 1},
@@ -56,7 +56,7 @@ func TestBigmapCoord_Distance(t *testing.T) {
 	coord2 := EncodeCoord(3, 4)
 
 	distance := coord1.Distance(coord2)
-	expected := 7 // |3-0| + |4-0| = 7
+	expected := int32(7) // |3-0| + |4-0| = 7
 
 	if distance != expected {
 		t.Errorf("Distance between (0,0) and (3,4) = %d, expected %d", distance, expected)
