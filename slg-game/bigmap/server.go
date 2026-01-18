@@ -6,6 +6,7 @@ import (
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/asynkron/protoactor-go/slg-game/bigmap/core"
 	"github.com/asynkron/protoactor-go/slg-game/bigmap/logic"
+	"github.com/asynkron/protoactor-go/slg-game/utils"
 )
 
 // Server 大地图服务器
@@ -41,7 +42,7 @@ func InitializePartitions(system *actor.ActorSystem) *core.PartitionManager {
 	partitionsPerRow, partitionsPerCol := core.GetPartitionCounts()
 
 	fmt.Printf("Initializing %dx%d partitions (total: %d)\n", partitionsPerRow, partitionsPerCol, partitionsPerRow*partitionsPerCol)
-	fmt.Printf("Map size: %.0fx%.0f, Partition size: %.0fx%.0f\n",
+	fmt.Printf("Map size: %dx%d, Partition size: %dx%d\n",
 		core.MAP_WIDTH, core.MAP_HEIGHT, core.PARTITION_WIDTH, core.PARTITION_HEIGHT)
 
 	// 创建分区，按照地图坐标顺序 (0,0), (100,0), (200,0), ... 到 (1100,1100)
@@ -51,18 +52,18 @@ func InitializePartitions(system *actor.ActorSystem) *core.PartitionManager {
 			partitionIndexX := mapX / core.PARTITION_WIDTH
 			partitionIndexY := mapY / core.PARTITION_HEIGHT
 
-			partitionID := core.EncodePartitionID(partitionIndexX, partitionIndexY)
+			partitionID := int64(utils.EncodeCoord(partitionIndexX, partitionIndexY))
 			props := actor.PropsFromProducer(func() actor.Actor {
 				return &core.PartionActor{ID: partitionID}
 			})
 
-			pid, err := system.Root.SpawnNamed(props, fmt.Sprintf("partition-%.0f-%.0f", mapX, mapY))
+			pid, err := system.Root.SpawnNamed(props, fmt.Sprintf("partition-%d-%d", mapX, mapY))
 			if err != nil {
-				panic(fmt.Sprintf("Failed to spawn partition actor (%.0f,%.0f): %v", mapX, mapY, err))
+				panic(fmt.Sprintf("Failed to spawn partition actor (%d,%d): %v", mapX, mapY, err))
 			}
 
 			pm.RegisterPartition(partitionID, pid)
-			fmt.Printf("Created partition at map(%.0f,%.0f) with index(%d,%d) ID=%d\n",
+			fmt.Printf("Created partition at map(%d,%d) with index(%d,%d) ID=%d\n",
 				mapX, mapY, partitionIndexX, partitionIndexY, partitionID)
 		}
 	}

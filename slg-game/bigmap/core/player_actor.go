@@ -10,6 +10,7 @@ import (
 
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/asynkron/protoactor-go/slg-game/domain/bmap"
+	"github.com/asynkron/protoactor-go/slg-game/utils"
 )
 
 type PlayerActor struct {
@@ -54,7 +55,7 @@ func computePartitionsForAOI(center bmap.Position, view bmap.View) []int64 {
 	var partitions []int64
 	for py := pyMin; py <= pyMax; py++ {
 		for px := pxMin; px <= pxMax; px++ {
-			partitionID := EncodePartitionID(px, py)
+			partitionID := int64(utils.EncodeCoord(px, py))
 			partitions = append(partitions, partitionID)
 		}
 	}

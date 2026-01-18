@@ -10,31 +10,19 @@ import (
 
 // 地图和分区尺寸常量
 const (
-	MAP_WIDTH        = 1200.0 // 地图宽度
-	MAP_HEIGHT       = 1200.0 // 地图高度
-	PARTITION_WIDTH  = 100.0  // 分区宽度 (必须能整除MAP_WIDTH)
-	PARTITION_HEIGHT = 100.0  // 分区高度 (必须能整除MAP_HEIGHT)
+	MAP_WIDTH        = 1200 // 地图宽度
+	MAP_HEIGHT       = 1200 // 地图高度
+	PARTITION_WIDTH  = 100  // 分区宽度 (必须能整除MAP_WIDTH)
+	PARTITION_HEIGHT = 100  // 分区高度 (必须能整除MAP_HEIGHT)
 )
-
-// EncodePartitionID 将分区坐标编码为int64 ID (兼容性函数)
-func EncodePartitionID(px, py int) int64 {
-	coord := utils.EncodeCoord(px, py)
-	return int64(coord)
-}
-
-// DecodePartitionID 从int64 ID解码出分区坐标 (兼容性函数)
-func DecodePartitionID(id int64) (px, py int) {
-	coord := utils.BigmapCoord(id)
-	return coord.X(), coord.Y()
-}
 
 // ValidatePartitionSizes 验证分区尺寸是否能整除地图尺寸
 func ValidatePartitionSizes() error {
 	if math.Mod(MAP_WIDTH, PARTITION_WIDTH) != 0 {
-		return fmt.Errorf("partition width %.0f must evenly divide map width %.0f", PARTITION_WIDTH, MAP_WIDTH)
+		return fmt.Errorf("partition width %d must evenly divide map width %d", PARTITION_WIDTH, MAP_WIDTH)
 	}
 	if math.Mod(MAP_HEIGHT, PARTITION_HEIGHT) != 0 {
-		return fmt.Errorf("partition height %.0f must evenly divide map height %.0f", PARTITION_HEIGHT, MAP_HEIGHT)
+		return fmt.Errorf("partition height %d must evenly divide map height %d", PARTITION_HEIGHT, MAP_HEIGHT)
 	}
 	return nil
 }
@@ -48,7 +36,8 @@ func GetPartitionCounts() (perRow, perCol int) {
 
 // GetPartitionBounds 根据分区ID获取分区边界坐标
 func GetPartitionBounds(partitionID int64) (minX, minY, maxX, maxY float64) {
-	px, py := DecodePartitionID(partitionID)
+	coord := utils.BigmapCoord(partitionID)
+	px, py := coord.X(), coord.Y()
 	minX = float64(px) * PARTITION_WIDTH
 	minY = float64(py) * PARTITION_HEIGHT
 	maxX = minX + PARTITION_WIDTH
