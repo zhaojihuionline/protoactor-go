@@ -41,22 +41,29 @@ func InitializePartitions(system *actor.ActorSystem) *core.PartitionManager {
 	partitionsPerRow, partitionsPerCol := core.GetPartitionCounts()
 
 	fmt.Printf("Initializing %dx%d partitions (total: %d)\n", partitionsPerRow, partitionsPerCol, partitionsPerRow*partitionsPerCol)
+	fmt.Printf("Map size: %.0fx%.0f, Partition size: %.0fx%.0f\n",
+		core.MAP_WIDTH, core.MAP_HEIGHT, core.PARTITION_WIDTH, core.PARTITION_HEIGHT)
 
-	// 创建分区，按照坐标顺序 (0,0) 到 (maxX-1,maxY-1)
-	for py := 0; py < partitionsPerCol; py++ {
-		for px := 0; px < partitionsPerRow; px++ {
-			partitionID := core.EncodePartitionID(px, py)
+	// 创建分区，按照地图坐标顺序 (0,0), (100,0), (200,0), ... 到 (1100,1100)
+	for mapY := 0; mapY < core.MAP_HEIGHT; mapY += core.PARTITION_HEIGHT {
+		for mapX := 0; mapX < core.MAP_WIDTH; mapX += core.PARTITION_WIDTH {
+			// 计算分区索引用于编码
+			partitionIndexX := mapX / core.PARTITION_WIDTH
+			partitionIndexY := mapY / core.PARTITION_HEIGHT
+
+			partitionID := core.EncodePartitionID(partitionIndexX, partitionIndexY)
 			props := actor.PropsFromProducer(func() actor.Actor {
 				return &core.PartionActor{ID: partitionID}
 			})
 
-			pid, err := system.Root.SpawnNamed(props, fmt.Sprintf("partition-%d-%d", px, py))
+			pid, err := system.Root.SpawnNamed(props, fmt.Sprintf("partition-%.0f-%.0f", mapX, mapY))
 			if err != nil {
-				panic(fmt.Sprintf("Failed to spawn partition actor (%d,%d): %v", px, py, err))
+				panic(fmt.Sprintf("Failed to spawn partition actor (%.0f,%.0f): %v", mapX, mapY, err))
 			}
 
 			pm.RegisterPartition(partitionID, pid)
-			fmt.Printf("Created partition (%d,%d) with ID %d\n", px, py, partitionID)
+			fmt.Printf("Created partition at map(%.0f,%.0f) with index(%d,%d) ID=%d\n",
+				mapX, mapY, partitionIndexX, partitionIndexY, partitionID)
 		}
 	}
 

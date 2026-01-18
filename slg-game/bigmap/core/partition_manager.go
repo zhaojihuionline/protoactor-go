@@ -9,10 +9,10 @@ import (
 
 // 地图和分区尺寸常量
 const (
-	MAP_WIDTH        = 1200.0 // 地图宽度
-	MAP_HEIGHT       = 1200.0 // 地图高度
-	PARTITION_WIDTH  = 100.0  // 分区宽度 (必须能整除MAP_WIDTH)
-	PARTITION_HEIGHT = 100.0  // 分区高度 (必须能整除MAP_HEIGHT)
+	MAP_WIDTH        = 1200 // 地图宽度
+	MAP_HEIGHT       = 1200 // 地图高度
+	PARTITION_WIDTH  = 100  // 分区宽度 (必须能整除MAP_WIDTH)
+	PARTITION_HEIGHT = 100  // 分区高度 (必须能整除MAP_HEIGHT)
 )
 
 // 分区ID编码常量 (int64位移编码)
