@@ -1,4 +1,4 @@
-package slg
+package core
 
 /*
 
@@ -8,12 +8,13 @@ import (
 	"fmt"
 
 	"github.com/asynkron/protoactor-go/actor"
+	"github.com/asynkron/protoactor-go/slg-game/domain/bmap"
 )
 
 type PartionActor struct {
 	actor.Actor
 	ID        int64
-	Listeners map[LayerNumer]map[*actor.PID]bool
+	Listeners map[bmap.LayerNumber]map[*actor.PID]bool
 }
 
 func (a *PartionActor) Receive(context actor.Context) {

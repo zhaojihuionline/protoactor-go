@@ -1,4 +1,4 @@
-package slg
+package core
 
 /*
 
@@ -8,16 +8,17 @@ import (
 	"fmt"
 
 	"github.com/asynkron/protoactor-go/actor"
+	"github.com/asynkron/protoactor-go/slg-game/domain/bmap"
 )
 
 type PlayerActor struct {
 	actor.Actor
 	Name                 string
-	CurPosition          Position
+	CurPosition          bmap.Position
 	CurScale             float64
-	CurLayerNumber       LayerNumer
-	LastAOICache         *AOICache
-	LastLayerEntityCache map[LayerNumer]*map[EntityID]*Entity
+	CurLayerNumber       bmap.LayerNumber
+	LastAOICache         *bmap.AOICache
+	LastLayerEntityCache map[bmap.LayerNumber]*map[bmap.EntityID]*bmap.Entity
 }
 
 func (a *PlayerActor) Receive(context actor.Context) {

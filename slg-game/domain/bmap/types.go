@@ -1,4 +1,4 @@
-package slg
+package bmap
 
 /*
 	公共类型定义
@@ -6,11 +6,17 @@ package slg
 
 import "time"
 
-type LayerNumer int32
+type LayerNumber int32
 
 const (
-	LayerNumerNear1 LayerNumer = 1
-	LayerNumerFar8  LayerNumer = 8
+	LayerNumber1 LayerNumber = 1
+	LayerNumber2 LayerNumber = 2
+	LayerNumber3 LayerNumber = 3
+	LayerNumber4 LayerNumber = 4
+	LayerNumber5 LayerNumber = 5
+	LayerNumber6 LayerNumber = 6
+	LayerNumber7 LayerNumber = 7
+	LayerNumber8 LayerNumber = 8
 )
 
 type EntityID int64
