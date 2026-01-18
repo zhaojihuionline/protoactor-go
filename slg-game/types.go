@@ -1,5 +1,9 @@
 package main
 
+/*
+	公共类型定义
+*/
+
 import "time"
 
 type LayerNumer int32
