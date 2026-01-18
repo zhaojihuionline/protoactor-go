@@ -2,18 +2,19 @@ package logic
 
 import (
 	"github.com/asynkron/protoactor-go/actor"
+	"github.com/asynkron/protoactor-go/slg-game/bigmap/core"
 	"github.com/asynkron/protoactor-go/slg-game/domain/bmap"
 )
 
 // GameWorld 大地图游戏世界管理器
 type GameWorld struct {
 	system        *actor.ActorSystem
-	playerManager *PlayerManager
+	playerManager *core.PlayerManager
 }
 
 // NewGameWorld 创建新的游戏世界
 func NewGameWorld(system *actor.ActorSystem, partitionPIDs map[int64]*actor.PID) *GameWorld {
-	playerManager := NewPlayerManager(system, partitionPIDs)
+	playerManager := core.NewPlayerManager(system, partitionPIDs)
 	return &GameWorld{
 		system:        system,
 		playerManager: playerManager,
@@ -55,9 +56,4 @@ func (gw *GameWorld) LeaveMap(playerID string, layer bmap.LayerNumber) error {
 		Layer: layer,
 	})
 	return nil
-}
-
-// GetPlayerManager 获取玩家管理器
-func (gw *GameWorld) GetPlayerManager() *PlayerManager {
-	return gw.playerManager
 }

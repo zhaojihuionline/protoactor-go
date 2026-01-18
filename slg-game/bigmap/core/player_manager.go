@@ -1,10 +1,9 @@
-package logic
+package core
 
 import (
 	"fmt"
 
 	"github.com/asynkron/protoactor-go/actor"
-	"github.com/asynkron/protoactor-go/slg-game/bigmap/core"
 )
 
 // PlayerManager 玩家Actor管理器
@@ -32,7 +31,7 @@ func (pm *PlayerManager) GetOrCreatePlayer(playerID string) *actor.PID {
 
 	// 创建新的PlayerActor
 	playerProps := actor.PropsFromProducer(func() actor.Actor {
-		return core.NewPlayerActor(playerID, pm.partitionPIDs)
+		return NewPlayerActor(playerID, pm.partitionPIDs)
 	})
 
 	playerPID, err := pm.system.Root.SpawnNamed(playerProps, fmt.Sprintf("player-%s", playerID))
