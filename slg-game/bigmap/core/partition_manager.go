@@ -4,6 +4,35 @@ import (
 	"github.com/asynkron/protoactor-go/actor"
 )
 
+// 分区ID编码常量 (int64位移编码)
+// 使用12位坐标空间，支持4096x4096分区
+const (
+	PARTITION_BITS = 12                        // 坐标位数
+	PARTITION_MASK = (1 << PARTITION_BITS) - 1 // 坐标掩码 (4095)
+	PARTITION_MAX  = PARTITION_MASK            // 最大坐标值
+)
+
+// EncodePartitionID 将分区坐标编码为int64 ID
+func EncodePartitionID(px, py int) int64 {
+	return int64(py)<<PARTITION_BITS | int64(px)
+}
+
+// DecodePartitionID 从int64 ID解码出分区坐标
+func DecodePartitionID(id int64) (px, py int) {
+	return int(id & PARTITION_MASK), int(id >> PARTITION_BITS)
+}
+
+// GetPartitionBounds 根据分区ID获取分区边界坐标
+func GetPartitionBounds(partitionID int64) (minX, minY, maxX, maxY float64) {
+	const partitionSize = 100.0
+	px, py := DecodePartitionID(partitionID)
+	minX = float64(px) * partitionSize
+	minY = float64(py) * partitionSize
+	maxX = minX + partitionSize
+	maxY = minY + partitionSize
+	return
+}
+
 // PartitionManager 分区管理器，管理分区ID到PID的映射
 type PartitionManager struct {
 	partitionPIDs map[int64]*actor.PID

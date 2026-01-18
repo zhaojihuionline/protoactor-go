@@ -35,7 +35,6 @@ func NewPlayerActor(name string, partitionPIDs map[int64]*actor.PID) *PlayerActo
 // computePartitionsForAOI 计算视野范围内可能涉及的分区ID列表
 func computePartitionsForAOI(center bmap.Position, view bmap.View) []int64 {
 	const partitionSize = 100.0
-	const partitionsPerRow = 12
 
 	halfW := float64(view.W) / 2
 	halfH := float64(view.H) / 2
@@ -47,14 +46,14 @@ func computePartitionsForAOI(center bmap.Position, view bmap.View) []int64 {
 
 	// 计算分区范围，限制在地图边界内
 	pxMin := int(math.Max(0, math.Floor(minX/partitionSize)))
-	pxMax := int(math.Min(partitionsPerRow-1, math.Floor(maxX/partitionSize)))
+	pxMax := int(math.Min(PARTITION_MAX, math.Floor(maxX/partitionSize)))
 	pyMin := int(math.Max(0, math.Floor(minY/partitionSize)))
-	pyMax := int(math.Min(partitionsPerRow-1, math.Floor(maxY/partitionSize)))
+	pyMax := int(math.Min(PARTITION_MAX, math.Floor(maxY/partitionSize)))
 
 	var partitions []int64
 	for py := pyMin; py <= pyMax; py++ {
 		for px := pxMin; px <= pxMax; px++ {
-			partitionID := int64(py*partitionsPerRow + px)
+			partitionID := EncodePartitionID(px, py)
 			partitions = append(partitions, partitionID)
 		}
 	}
@@ -64,16 +63,7 @@ func computePartitionsForAOI(center bmap.Position, view bmap.View) []int64 {
 
 // partitionBounds 根据分区ID计算分区边界 (minX, minY, maxX, maxY)
 func partitionBounds(partitionID int64) (float64, float64, float64, float64) {
-	const partitionSize = 100.0
-	const partitionsPerRow = 12
-
-	px := int(partitionID) % partitionsPerRow
-	py := int(partitionID) / partitionsPerRow
-
-	minX := float64(px) * partitionSize
-	minY := float64(py) * partitionSize
-
-	return minX, minY, minX + partitionSize, minY + partitionSize
+	return GetPartitionBounds(partitionID)
 }
 
 // rectsIntersect 检查两个矩形是否相交

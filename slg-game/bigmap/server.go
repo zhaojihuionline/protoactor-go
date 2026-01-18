@@ -33,21 +33,24 @@ func NewServer(system *actor.ActorSystem) *Server {
 // InitializePartitions 初始化所有分区actor并注册到管理器
 func InitializePartitions(system *actor.ActorSystem) *core.PartitionManager {
 	pm := core.NewPartitionManager()
-	const totalPartitions = 144 // 12x12 = 144
+	const partitionsPerRow = 12 // 12x12 = 144 partitions
 
-	for i := 0; i < totalPartitions; i++ {
-		partitionID := int64(i)
-		props := actor.PropsFromProducer(func() actor.Actor {
-			return &core.PartionActor{ID: partitionID}
-		})
+	// 创建分区，按照坐标顺序 (0,0) 到 (11,11)
+	for py := 0; py < partitionsPerRow; py++ {
+		for px := 0; px < partitionsPerRow; px++ {
+			partitionID := core.EncodePartitionID(px, py)
+			props := actor.PropsFromProducer(func() actor.Actor {
+				return &core.PartionActor{ID: partitionID}
+			})
 
-		pid, err := system.Root.SpawnNamed(props, fmt.Sprintf("partition-%d", partitionID))
-		if err != nil {
-			panic(fmt.Sprintf("Failed to spawn partition actor %d: %v", partitionID, err))
+			pid, err := system.Root.SpawnNamed(props, fmt.Sprintf("partition-%d-%d", px, py))
+			if err != nil {
+				panic(fmt.Sprintf("Failed to spawn partition actor (%d,%d): %v", px, py, err))
+			}
+
+			pm.RegisterPartition(partitionID, pid)
+			fmt.Printf("Created partition (%d,%d) with ID %d\n", px, py, partitionID)
 		}
-
-		pm.RegisterPartition(partitionID, pid)
-		fmt.Printf("Created partition %d\n", partitionID)
 	}
 
 	return pm
