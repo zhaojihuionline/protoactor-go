@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/asynkron/protoactor-go/slg-game/bigmap/core"
+	"github.com/asynkron/protoactor-go/slg-game/bigmap/logic"
 	"github.com/asynkron/protoactor-go/slg-game/domain/bmap"
 )
 
@@ -26,29 +28,49 @@ func main() {
 		}
 
 		partitionPIDs[partitionID] = pid
-		fmt.Printf("Created partition %d with PID: %s\n", partitionID, pid.String())
+		fmt.Printf("Created partition %d\n", partitionID)
 	}
 
-	// 创建玩家actor，注入分区PID映射
-	playerProps := actor.PropsFromProducer(func() actor.Actor {
-		return core.NewPlayerActor("player1", partitionPIDs)
-	})
+	// 创建游戏世界（包含PlayerManager）
+	gameWorld := logic.NewGameWorld(system, partitionPIDs)
 
-	playerPID, err := system.Root.SpawnNamed(playerProps, "player1")
+	// 演示业务接口使用
+	playerID := "player1"
+
+	// 1. 玩家进入大地图
+	fmt.Printf("\n=== 玩家 %s 进入大地图 ===\n", playerID)
+	err := gameWorld.EnterMap(playerID, 1, bmap.Position{X: 250, Y: 250}, bmap.View{W: 300, H: 300})
 	if err != nil {
-		panic(fmt.Sprintf("Failed to spawn player actor: %v", err))
+		fmt.Printf("EnterMap failed: %v\n", err)
 	}
 
-	fmt.Printf("Created player with PID: %s\n", playerPID.String())
+	// 等待消息处理
+	time.Sleep(100 * time.Millisecond)
 
-	// 示例：发送EnterMap消息
-	system.Root.Send(playerPID, &bmap.EnterMap{
-		Layer:  1,
-		Center: bmap.Position{X: 250, Y: 250}, // 视野中心在分区(2,2)和周围分区
-		View:   bmap.View{W: 300, H: 300},     // 视野大小300x300
-	})
+	// 2. 玩家移动视野
+	fmt.Printf("\n=== 玩家 %s 视野移动 ===\n", playerID)
+	err = gameWorld.MoveView(playerID, 1, bmap.Position{X: 450, Y: 450}, bmap.View{W: 300, H: 300})
+	if err != nil {
+		fmt.Printf("MoveView failed: %v\n", err)
+	}
+
+	// 等待消息处理
+	time.Sleep(100 * time.Millisecond)
+
+	// 3. 玩家离开大地图
+	fmt.Printf("\n=== 玩家 %s 离开大地图 ===\n", playerID)
+	err = gameWorld.LeaveMap(playerID, 1)
+	if err != nil {
+		fmt.Printf("LeaveMap failed: %v\n", err)
+	}
+
+	// 显示统计信息
+	time.Sleep(100 * time.Millisecond)
+	fmt.Printf("\n=== 系统统计 ===\n")
+	fmt.Printf("在线玩家数量: %d\n", gameWorld.GetPlayerManager().GetPlayerCount())
+	fmt.Printf("在线玩家列表: %v\n", gameWorld.GetPlayerManager().GetAllPlayers())
 
 	// 等待系统运行
-	fmt.Println("System is running. Press Ctrl+C to exit.")
+	fmt.Println("\nSystem is running. Press Ctrl+C to exit.")
 	select {}
 }
