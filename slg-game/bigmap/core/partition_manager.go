@@ -1,15 +1,25 @@
 package core
 
 import (
+	"fmt"
+	"math"
+
 	"github.com/asynkron/protoactor-go/actor"
 )
 
+// 地图和分区尺寸常量
+const (
+	MAP_WIDTH        = 1200.0 // 地图宽度
+	MAP_HEIGHT       = 1200.0 // 地图高度
+	PARTITION_WIDTH  = 100.0  // 分区宽度 (必须能整除MAP_WIDTH)
+	PARTITION_HEIGHT = 100.0  // 分区高度 (必须能整除MAP_HEIGHT)
+)
+
 // 分区ID编码常量 (int64位移编码)
-// 使用12位坐标空间，支持4096x4096分区
+// 坐标空间基于分区数量计算
 const (
 	PARTITION_BITS = 12                        // 坐标位数
 	PARTITION_MASK = (1 << PARTITION_BITS) - 1 // 坐标掩码 (4095)
-	PARTITION_MAX  = PARTITION_MASK            // 最大坐标值
 )
 
 // EncodePartitionID 将分区坐标编码为int64 ID
@@ -22,14 +32,31 @@ func DecodePartitionID(id int64) (px, py int) {
 	return int(id & PARTITION_MASK), int(id >> PARTITION_BITS)
 }
 
+// ValidatePartitionSizes 验证分区尺寸是否能整除地图尺寸
+func ValidatePartitionSizes() error {
+	if math.Mod(MAP_WIDTH, PARTITION_WIDTH) != 0 {
+		return fmt.Errorf("partition width %.0f must evenly divide map width %.0f", PARTITION_WIDTH, MAP_WIDTH)
+	}
+	if math.Mod(MAP_HEIGHT, PARTITION_HEIGHT) != 0 {
+		return fmt.Errorf("partition height %.0f must evenly divide map height %.0f", PARTITION_HEIGHT, MAP_HEIGHT)
+	}
+	return nil
+}
+
+// GetPartitionCounts 获取分区行列数量
+func GetPartitionCounts() (perRow, perCol int) {
+	perRow = int(MAP_WIDTH / PARTITION_WIDTH)
+	perCol = int(MAP_HEIGHT / PARTITION_HEIGHT)
+	return
+}
+
 // GetPartitionBounds 根据分区ID获取分区边界坐标
 func GetPartitionBounds(partitionID int64) (minX, minY, maxX, maxY float64) {
-	const partitionSize = 100.0
 	px, py := DecodePartitionID(partitionID)
-	minX = float64(px) * partitionSize
-	minY = float64(py) * partitionSize
-	maxX = minX + partitionSize
-	maxY = minY + partitionSize
+	minX = float64(px) * PARTITION_WIDTH
+	minY = float64(py) * PARTITION_HEIGHT
+	maxX = minX + PARTITION_WIDTH
+	maxY = minY + PARTITION_HEIGHT
 	return
 }
 

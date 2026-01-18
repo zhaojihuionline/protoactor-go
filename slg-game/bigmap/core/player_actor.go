@@ -34,8 +34,6 @@ func NewPlayerActor(name string, partitionPIDs map[int64]*actor.PID) *PlayerActo
 
 // computePartitionsForAOI 计算视野范围内可能涉及的分区ID列表
 func computePartitionsForAOI(center bmap.Position, view bmap.View) []int64 {
-	const partitionSize = 100.0
-
 	halfW := float64(view.W) / 2
 	halfH := float64(view.H) / 2
 
@@ -44,11 +42,14 @@ func computePartitionsForAOI(center bmap.Position, view bmap.View) []int64 {
 	minY := center.Y - halfH
 	maxY := center.Y + halfH
 
+	// 获取分区行列数量
+	partitionsPerRow, partitionsPerCol := GetPartitionCounts()
+
 	// 计算分区范围，限制在地图边界内
-	pxMin := int(math.Max(0, math.Floor(minX/partitionSize)))
-	pxMax := int(math.Min(PARTITION_MAX, math.Floor(maxX/partitionSize)))
-	pyMin := int(math.Max(0, math.Floor(minY/partitionSize)))
-	pyMax := int(math.Min(PARTITION_MAX, math.Floor(maxY/partitionSize)))
+	pxMin := int(math.Max(0, math.Floor(minX/PARTITION_WIDTH)))
+	pxMax := int(math.Min(float64(partitionsPerRow-1), math.Floor(maxX/PARTITION_WIDTH)))
+	pyMin := int(math.Max(0, math.Floor(minY/PARTITION_HEIGHT)))
+	pyMax := int(math.Min(float64(partitionsPerCol-1), math.Floor(maxY/PARTITION_HEIGHT)))
 
 	var partitions []int64
 	for py := pyMin; py <= pyMax; py++ {

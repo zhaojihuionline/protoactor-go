@@ -32,11 +32,18 @@ func NewServer(system *actor.ActorSystem) *Server {
 
 // InitializePartitions 初始化所有分区actor并注册到管理器
 func InitializePartitions(system *actor.ActorSystem) *core.PartitionManager {
-	pm := core.NewPartitionManager()
-	const partitionsPerRow = 12 // 12x12 = 144 partitions
+	// 验证分区尺寸
+	if err := core.ValidatePartitionSizes(); err != nil {
+		panic(fmt.Sprintf("Invalid partition sizes: %v", err))
+	}
 
-	// 创建分区，按照坐标顺序 (0,0) 到 (11,11)
-	for py := 0; py < partitionsPerRow; py++ {
+	pm := core.NewPartitionManager()
+	partitionsPerRow, partitionsPerCol := core.GetPartitionCounts()
+
+	fmt.Printf("Initializing %dx%d partitions (total: %d)\n", partitionsPerRow, partitionsPerCol, partitionsPerRow*partitionsPerCol)
+
+	// 创建分区，按照坐标顺序 (0,0) 到 (maxX-1,maxY-1)
+	for py := 0; py < partitionsPerCol; py++ {
 		for px := 0; px < partitionsPerRow; px++ {
 			partitionID := core.EncodePartitionID(px, py)
 			props := actor.PropsFromProducer(func() actor.Actor {
