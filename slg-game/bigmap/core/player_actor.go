@@ -158,15 +158,17 @@ func (a *PlayerActor) Receive(context actor.Context) {
 		a.handleAOIUpdate(context, msg.Layer, msg.Center, msg.View)
 
 	case *bmap.LeaveMap:
-		fmt.Printf("PlayerActor leaving map at layer %d\n", msg.Layer)
-		if layerMap, ok := a.CurAOIPartions[msg.Layer]; ok {
-			for partitionID := range layerMap {
-				pid := a.PartitionPIDs[partitionID]
-				if pid != nil {
-					context.Send(pid, &bmap.UnsubscribePlayer{Layer: msg.Layer, PID: context.Self()})
+		fmt.Printf("PlayerActor leaving map at layer %s\n", context.Self().Id)
+		for layer := bmap.LayerNumber(1); layer <= bmap.LayerCount; layer++ {
+			if layerMap, ok := a.CurAOIPartions[layer]; ok {
+				for partitionID := range layerMap {
+					pid := a.PartitionPIDs[partitionID]
+					if pid != nil {
+						context.Send(pid, &bmap.UnsubscribePlayer{Layer: layer, PID: context.Self()})
+					}
 				}
+				delete(a.CurAOIPartions, layer)
 			}
-			delete(a.CurAOIPartions, msg.Layer)
 		}
 	default:
 		_ = msg

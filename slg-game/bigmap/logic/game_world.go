@@ -52,9 +52,7 @@ func (gw *GameWorld) LeaveMap(playerID string, layer bmap.LayerNumber) error {
 	if playerPID == nil {
 		return nil // 玩家不存在，无需离开
 	}
-	gw.system.Root.Send(playerPID, &bmap.LeaveMap{
-		Layer: layer,
-	})
+	gw.system.Root.Send(playerPID, &bmap.LeaveMap{})
 	return nil
 }
 

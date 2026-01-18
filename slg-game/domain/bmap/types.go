@@ -12,6 +12,7 @@ import (
 
 type LayerNumber int32
 
+const LayerCount = 8
 const (
 	LayerNumber1 LayerNumber = 1
 	LayerNumber2 LayerNumber = 2
@@ -86,7 +87,6 @@ type MoveView struct {
 
 // LeaveMap 离开大地图消息
 type LeaveMap struct {
-	Layer LayerNumber
 }
 
 // SubscribePlayer 订阅玩家消息（发送给PartionActor）
