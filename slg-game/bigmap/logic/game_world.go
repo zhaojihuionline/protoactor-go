@@ -13,8 +13,8 @@ type GameWorld struct {
 }
 
 // NewGameWorld 创建新的游戏世界
-func NewGameWorld(system *actor.ActorSystem, partitionPIDs map[int64]*actor.PID) *GameWorld {
-	playerManager := core.NewPlayerManager(system, partitionPIDs)
+func NewGameWorld(system *actor.ActorSystem, partitionManager *core.PartitionManager) *GameWorld {
+	playerManager := core.NewPlayerManager(system, partitionManager)
 	return &GameWorld{
 		system:        system,
 		playerManager: playerManager,
@@ -56,4 +56,9 @@ func (gw *GameWorld) LeaveMap(playerID string, layer bmap.LayerNumber) error {
 		Layer: layer,
 	})
 	return nil
+}
+
+// GetPlayerManager 获取玩家管理器
+func (gw *GameWorld) GetPlayerManager() *core.PlayerManager {
+	return gw.playerManager
 }

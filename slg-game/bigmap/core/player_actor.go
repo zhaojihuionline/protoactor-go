@@ -21,14 +21,12 @@ type PlayerActor struct {
 	CurAOIPartions       map[bmap.LayerNumber]map[*actor.PID]bool
 	LastAOICache         *bmap.AOICache
 	LastLayerEntityCache map[bmap.LayerNumber]*map[bmap.EntityID]*bmap.Entity
-	PartitionPIDs        map[int64]*actor.PID
 }
 
 func NewPlayerActor(name string, partitionPIDs map[int64]*actor.PID) *PlayerActor {
 	return &PlayerActor{
 		Name:           name,
 		CurAOIPartions: make(map[bmap.LayerNumber]map[*actor.PID]bool),
-		PartitionPIDs:  partitionPIDs,
 	}
 }
 

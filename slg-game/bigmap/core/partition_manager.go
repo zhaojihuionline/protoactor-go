@@ -1,8 +1,6 @@
 package core
 
 import (
-	"fmt"
-
 	"github.com/asynkron/protoactor-go/actor"
 )
 
@@ -39,28 +37,6 @@ func (pm *PartitionManager) GetPartitionIDByPID(pid *actor.PID) int64 {
 	return -1 // 无效ID
 }
 
-// InitializePartitions 初始化所有分区actor并注册到管理器
-// 这个函数应该在系统启动时调用
-func InitializePartitions(system *actor.ActorSystem) (*PartitionManager, []*actor.PID) {
-	pm := NewPartitionManager()
-	const totalPartitions = 144 // 12x12 = 144
-
-	partitionPIDs := make([]*actor.PID, totalPartitions)
-
-	for i := 0; i < totalPartitions; i++ {
-		partitionID := int64(i)
-		props := actor.PropsFromProducer(func() actor.Actor {
-			return &PartionActor{ID: partitionID}
-		})
-
-		pid, err := system.Root.SpawnNamed(props, fmt.Sprintf("partition-%d", partitionID))
-		if err != nil {
-			panic(fmt.Sprintf("Failed to spawn partition actor %d: %v", partitionID, err))
-		}
-
-		partitionPIDs[i] = pid
-		pm.RegisterPartition(partitionID, pid)
-	}
-
-	return pm, partitionPIDs
+func (pm *PartitionManager) GetPartionPIDs() map[int64]*actor.PID {
+	return pm.partitionPIDs
 }

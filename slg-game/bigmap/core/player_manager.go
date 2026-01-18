@@ -8,17 +8,17 @@ import (
 
 // PlayerManager 玩家Actor管理器
 type PlayerManager struct {
-	system        *actor.ActorSystem
-	playerPIDs    map[string]*actor.PID // 玩家ID -> 玩家PID映射
-	partitionPIDs map[int64]*actor.PID  // 分区ID -> 分区PID映射
+	system           *actor.ActorSystem
+	playerPIDs       map[string]*actor.PID // 玩家ID -> 玩家PID映射
+	partitionManager *PartitionManager     // 分区管理器引用
 }
 
 // NewPlayerManager 创建新的玩家管理器
-func NewPlayerManager(system *actor.ActorSystem, partitionPIDs map[int64]*actor.PID) *PlayerManager {
+func NewPlayerManager(system *actor.ActorSystem, partitionManager *PartitionManager) *PlayerManager {
 	return &PlayerManager{
-		system:        system,
-		playerPIDs:    make(map[string]*actor.PID),
-		partitionPIDs: partitionPIDs,
+		system:           system,
+		playerPIDs:       make(map[string]*actor.PID),
+		partitionManager: partitionManager,
 	}
 }
 
@@ -31,7 +31,7 @@ func (pm *PlayerManager) GetOrCreatePlayer(playerID string) *actor.PID {
 
 	// 创建新的PlayerActor
 	playerProps := actor.PropsFromProducer(func() actor.Actor {
-		return NewPlayerActor(playerID, pm.partitionPIDs)
+		return NewPlayerActor(playerID, pm.partitionManager.GetPartionPIDs())
 	})
 
 	playerPID, err := pm.system.Root.SpawnNamed(playerProps, fmt.Sprintf("player-%s", playerID))
