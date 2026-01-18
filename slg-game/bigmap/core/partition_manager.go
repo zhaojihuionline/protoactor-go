@@ -5,31 +5,27 @@ import (
 	"math"
 
 	"github.com/asynkron/protoactor-go/actor"
+	"github.com/asynkron/protoactor-go/slg-game/utils"
 )
 
 // 地图和分区尺寸常量
 const (
-	MAP_WIDTH        = 1200 // 地图宽度
-	MAP_HEIGHT       = 1200 // 地图高度
-	PARTITION_WIDTH  = 100  // 分区宽度 (必须能整除MAP_WIDTH)
-	PARTITION_HEIGHT = 100  // 分区高度 (必须能整除MAP_HEIGHT)
+	MAP_WIDTH        = 1200.0 // 地图宽度
+	MAP_HEIGHT       = 1200.0 // 地图高度
+	PARTITION_WIDTH  = 100.0  // 分区宽度 (必须能整除MAP_WIDTH)
+	PARTITION_HEIGHT = 100.0  // 分区高度 (必须能整除MAP_HEIGHT)
 )
 
-// 分区ID编码常量 (int64位移编码)
-// 坐标空间基于分区数量计算
-const (
-	PARTITION_BITS = 12                        // 坐标位数
-	PARTITION_MASK = (1 << PARTITION_BITS) - 1 // 坐标掩码 (4095)
-)
-
-// EncodePartitionID 将分区坐标编码为int64 ID
+// EncodePartitionID 将分区坐标编码为int64 ID (兼容性函数)
 func EncodePartitionID(px, py int) int64 {
-	return int64(py)<<PARTITION_BITS | int64(px)
+	coord := utils.EncodeCoord(px, py)
+	return int64(coord)
 }
 
-// DecodePartitionID 从int64 ID解码出分区坐标
+// DecodePartitionID 从int64 ID解码出分区坐标 (兼容性函数)
 func DecodePartitionID(id int64) (px, py int) {
-	return int(id & PARTITION_MASK), int(id >> PARTITION_BITS)
+	coord := utils.BigmapCoord(id)
+	return coord.X(), coord.Y()
 }
 
 // ValidatePartitionSizes 验证分区尺寸是否能整除地图尺寸
