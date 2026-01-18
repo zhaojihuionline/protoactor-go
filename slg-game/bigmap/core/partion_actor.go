@@ -13,8 +13,8 @@ import (
 
 type PartionActor struct {
 	actor.Actor
-	ID        int64
-	Listeners map[bmap.LayerNumber]map[*actor.PID]bool
+	ID            int64
+	CurAOIPlayers map[bmap.LayerNumber]map[*actor.PID]bool
 }
 
 func (a *PartionActor) Receive(context actor.Context) {

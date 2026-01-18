@@ -17,6 +17,7 @@ type PlayerActor struct {
 	CurPosition          bmap.Position
 	CurScale             float64
 	CurLayerNumber       bmap.LayerNumber
+	CurAOIPartions       map[bmap.LayerNumber]*map[*actor.PID]bool
 	LastAOICache         *bmap.AOICache
 	LastLayerEntityCache map[bmap.LayerNumber]*map[bmap.EntityID]*bmap.Entity
 }

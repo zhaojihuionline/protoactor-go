@@ -37,6 +37,11 @@ type Position struct {
 	Y float64
 }
 
+type View struct {
+	W int32
+	H int32
+}
+
 type Entity struct {
 	ID       int64
 	Type     EntityType
