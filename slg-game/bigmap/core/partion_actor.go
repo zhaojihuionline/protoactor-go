@@ -17,6 +17,7 @@ type PartionActor struct {
 	actor.Actor
 	Position      bmap.Position
 	CurAOIPlayers map[bmap.LayerNumber]map[*actor.PID]bool
+	Entities      map[bmap.EntityID]bool
 }
 
 func (a *PartionActor) Receive(context actor.Context) {
