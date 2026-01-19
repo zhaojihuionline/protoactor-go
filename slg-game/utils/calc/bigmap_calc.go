@@ -2,11 +2,11 @@ package calc
 
 import (
 	"github.com/asynkron/protoactor-go/slg-game/domain/bmap"
-	"github.com/asynkron/protoactor-go/slg-game/utils"
+	"github.com/asynkron/protoactor-go/slg-game/utils/coord"
 )
 
 // ComputePartitionsForAOI 计算视野范围内可能涉及的分区ID列表
-func ComputePartitionsForAOI(center bmap.Position, view bmap.View) []utils.BigmapCoord {
+func ComputePartitionsForAOI(center bmap.Position, view bmap.View) []coord.BigmapCoord {
 	// view.H 屏幕中心格子坐标的上下方的格子数
 	// view.W 屏幕中心格子坐标的左右方的格子数
 
@@ -23,10 +23,10 @@ func ComputePartitionsForAOI(center bmap.Position, view bmap.View) []utils.Bigma
 	pyMax := min(bmap.MAP_HEIGHT/bmap.PARTITION_HEIGHT-1, maxY/bmap.PARTITION_HEIGHT)
 
 	// 生成分区列表
-	var partitions []utils.BigmapCoord
+	var partitions []coord.BigmapCoord
 	for py := pyMin; py <= pyMax; py++ {
 		for px := pxMin; px <= pxMax; px++ {
-			partitions = append(partitions, utils.EncodeCoord(px, py))
+			partitions = append(partitions, coord.EncodeCoord(px, py))
 		}
 	}
 	return partitions

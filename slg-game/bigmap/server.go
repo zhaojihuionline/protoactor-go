@@ -7,7 +7,7 @@ import (
 	"github.com/asynkron/protoactor-go/slg-game/bigmap/core"
 	"github.com/asynkron/protoactor-go/slg-game/bigmap/logic"
 	"github.com/asynkron/protoactor-go/slg-game/domain/bmap"
-	"github.com/asynkron/protoactor-go/slg-game/utils"
+	"github.com/asynkron/protoactor-go/slg-game/utils/coord"
 )
 
 // Server 大地图服务器
@@ -53,7 +53,7 @@ func InitializePartitions(system *actor.ActorSystem) *core.PartitionManager {
 			partitionIndexX := mapX / bmap.PARTITION_WIDTH
 			partitionIndexY := mapY / bmap.PARTITION_HEIGHT
 
-			partitionID := utils.EncodeCoord(partitionIndexX, partitionIndexY)
+			partitionID := coord.EncodeCoord(partitionIndexX, partitionIndexY)
 			props := actor.PropsFromProducer(func() actor.Actor {
 				return &core.PartionActor{Position: bmap.Position{X: int32(partitionIndexX), Y: int32(partitionIndexY)}}
 			})

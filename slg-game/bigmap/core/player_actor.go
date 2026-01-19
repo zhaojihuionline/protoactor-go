@@ -9,8 +9,8 @@ import (
 
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/asynkron/protoactor-go/slg-game/domain/bmap"
-	"github.com/asynkron/protoactor-go/slg-game/utils"
 	"github.com/asynkron/protoactor-go/slg-game/utils/calc"
+	"github.com/asynkron/protoactor-go/slg-game/utils/coord"
 )
 
 type PlayerActor struct {
@@ -19,22 +19,22 @@ type PlayerActor struct {
 	CurPosition          bmap.Position
 	CurScale             float64
 	CurLayerNumber       bmap.LayerNumber
-	CurAOIPartions       map[bmap.LayerNumber]map[utils.BigmapCoord]bool
+	CurAOIPartions       map[bmap.LayerNumber]map[coord.BigmapCoord]bool
 	LastAOICache         *bmap.AOICache
 	LastLayerEntityCache map[bmap.LayerNumber]*map[bmap.EntityID]*bmap.Entity
-	PartitionPIDs        map[utils.BigmapCoord]*actor.PID
+	PartitionPIDs        map[coord.BigmapCoord]*actor.PID
 }
 
-func NewPlayerActor(name string, partitionPIDs map[utils.BigmapCoord]*actor.PID) *PlayerActor {
+func NewPlayerActor(name string, partitionPIDs map[coord.BigmapCoord]*actor.PID) *PlayerActor {
 	return &PlayerActor{
 		Name:           name,
-		CurAOIPartions: make(map[bmap.LayerNumber]map[utils.BigmapCoord]bool),
+		CurAOIPartions: make(map[bmap.LayerNumber]map[coord.BigmapCoord]bool),
 		PartitionPIDs:  partitionPIDs,
 	}
 }
 
 // partitionBounds 根据分区ID计算分区边界 (minX, minY, maxX, maxY)
-func partitionBounds(partitionID utils.BigmapCoord) (int32, int32, int32, int32) {
+func partitionBounds(partitionID coord.BigmapCoord) (int32, int32, int32, int32) {
 	return GetPartitionBounds(partitionID)
 }
 
@@ -46,10 +46,10 @@ func rectsIntersect(aMinX, aMinY, aMaxX, aMaxY, bMinX, bMinY, bMaxX, bMaxY int32
 // ensureCurAOIMap 确保当前层的AOI分区映射存在
 func (a *PlayerActor) ensureCurAOIMap(layer bmap.LayerNumber) {
 	if a.CurAOIPartions == nil {
-		a.CurAOIPartions = make(map[bmap.LayerNumber]map[utils.BigmapCoord]bool)
+		a.CurAOIPartions = make(map[bmap.LayerNumber]map[coord.BigmapCoord]bool)
 	}
 	if _, ok := a.CurAOIPartions[layer]; !ok {
-		a.CurAOIPartions[layer] = make(map[utils.BigmapCoord]bool)
+		a.CurAOIPartions[layer] = make(map[coord.BigmapCoord]bool)
 	}
 }
 
@@ -69,7 +69,7 @@ func (a *PlayerActor) handleAOIUpdate(context actor.Context, layer bmap.LayerNum
 	current := a.CurAOIPartions[layer]
 
 	// 计算新的订阅集合 (基于分区ID)
-	newSubscribed := make(map[utils.BigmapCoord]bool)
+	newSubscribed := make(map[coord.BigmapCoord]bool)
 	for _, partitionID := range possible {
 		// 检查AOI与分区空间相交
 		partMinX, partMinY, partMaxX, partMaxY := partitionBounds(partitionID)
