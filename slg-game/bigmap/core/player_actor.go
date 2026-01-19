@@ -44,10 +44,10 @@ func computePartitionsForAOI(center bmap.Position, view bmap.View) []utils.Bigma
 	maxY := center.Y + view.H
 
 	// 分区索引范围计算（整数运算）
-	pxMin := max(0, minX/PARTITION_WIDTH)
-	pxMax := min(MAP_WIDTH/PARTITION_WIDTH-1, maxX/PARTITION_WIDTH)
-	pyMin := max(0, minY/PARTITION_HEIGHT)
-	pyMax := min(MAP_HEIGHT/PARTITION_HEIGHT-1, maxY/PARTITION_HEIGHT)
+	pxMin := max(0, minX/bmap.PARTITION_WIDTH)
+	pxMax := min(bmap.MAP_WIDTH/bmap.PARTITION_WIDTH-1, maxX/bmap.PARTITION_WIDTH)
+	pyMin := max(0, minY/bmap.PARTITION_HEIGHT)
+	pyMax := min(bmap.MAP_HEIGHT/bmap.PARTITION_HEIGHT-1, maxY/bmap.PARTITION_HEIGHT)
 
 	// 生成分区列表
 	var partitions []utils.BigmapCoord

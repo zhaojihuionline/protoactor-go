@@ -44,14 +44,14 @@ func InitializePartitions(system *actor.ActorSystem) *core.PartitionManager {
 
 	fmt.Printf("Initializing %dx%d partitions (total: %d)\n", partitionsPerRow, partitionsPerCol, partitionsPerRow*partitionsPerCol)
 	fmt.Printf("Map size: %dx%d, Partition size: %dx%d\n",
-		core.MAP_WIDTH, core.MAP_HEIGHT, core.PARTITION_WIDTH, core.PARTITION_HEIGHT)
+		bmap.MAP_WIDTH, bmap.MAP_HEIGHT, bmap.PARTITION_WIDTH, bmap.PARTITION_HEIGHT)
 
 	// 创建分区，按照地图坐标顺序 (0,0), (100,0), (200,0), ... 到 (1100,1100)
-	for mapY := int32(0); mapY < core.MAP_HEIGHT; mapY += core.PARTITION_HEIGHT {
-		for mapX := int32(0); mapX < core.MAP_WIDTH; mapX += core.PARTITION_WIDTH {
+	for mapY := int32(0); mapY < bmap.MAP_HEIGHT; mapY += bmap.PARTITION_HEIGHT {
+		for mapX := int32(0); mapX < bmap.MAP_WIDTH; mapX += bmap.PARTITION_WIDTH {
 			// 计算分区索引用于编码
-			partitionIndexX := mapX / core.PARTITION_WIDTH
-			partitionIndexY := mapY / core.PARTITION_HEIGHT
+			partitionIndexX := mapX / bmap.PARTITION_WIDTH
+			partitionIndexY := mapY / bmap.PARTITION_HEIGHT
 
 			partitionID := utils.EncodeCoord(partitionIndexX, partitionIndexY)
 			props := actor.PropsFromProducer(func() actor.Actor {

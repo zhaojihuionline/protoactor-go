@@ -5,42 +5,35 @@ import (
 	"math"
 
 	"github.com/asynkron/protoactor-go/actor"
+	"github.com/asynkron/protoactor-go/slg-game/domain/bmap"
 	"github.com/asynkron/protoactor-go/slg-game/utils"
-)
-
-// 地图和分区尺寸常量
-const (
-	MAP_WIDTH        = 1200 // 地图宽度
-	MAP_HEIGHT       = 1200 // 地图高度
-	PARTITION_WIDTH  = 100  // 分区宽度 (必须能整除MAP_WIDTH)
-	PARTITION_HEIGHT = 100  // 分区高度 (必须能整除MAP_HEIGHT)
 )
 
 // ValidatePartitionSizes 验证分区尺寸是否能整除地图尺寸
 func ValidatePartitionSizes() error {
-	if math.Mod(MAP_WIDTH, PARTITION_WIDTH) != 0 {
-		return fmt.Errorf("partition width %d must evenly divide map width %d", PARTITION_WIDTH, MAP_WIDTH)
+	if math.Mod(bmap.MAP_WIDTH, bmap.PARTITION_WIDTH) != 0 {
+		return fmt.Errorf("partition width %d must evenly divide map width %d", bmap.PARTITION_WIDTH, bmap.MAP_WIDTH)
 	}
-	if math.Mod(MAP_HEIGHT, PARTITION_HEIGHT) != 0 {
-		return fmt.Errorf("partition height %d must evenly divide map height %d", PARTITION_HEIGHT, MAP_HEIGHT)
+	if math.Mod(bmap.MAP_HEIGHT, bmap.PARTITION_HEIGHT) != 0 {
+		return fmt.Errorf("partition height %d must evenly divide map height %d", bmap.PARTITION_HEIGHT, bmap.MAP_HEIGHT)
 	}
 	return nil
 }
 
 // GetPartitionCounts 获取分区行列数量
 func GetPartitionCounts() (perRow, perCol int) {
-	perRow = int(MAP_WIDTH / PARTITION_WIDTH)
-	perCol = int(MAP_HEIGHT / PARTITION_HEIGHT)
+	perRow = int(bmap.MAP_WIDTH / bmap.PARTITION_WIDTH)
+	perCol = int(bmap.MAP_HEIGHT / bmap.PARTITION_HEIGHT)
 	return
 }
 
 // GetPartitionBounds 根据分区ID获取分区边界坐标
 func GetPartitionBounds(partitionID utils.BigmapCoord) (minX, minY, maxX, maxY int32) {
 	px, py := partitionID.X(), partitionID.Y()
-	minX = px * PARTITION_WIDTH
-	minY = py * PARTITION_HEIGHT
-	maxX = minX + PARTITION_WIDTH
-	maxY = minY + PARTITION_HEIGHT
+	minX = px * bmap.PARTITION_WIDTH
+	minY = py * bmap.PARTITION_HEIGHT
+	maxX = minX + bmap.PARTITION_WIDTH
+	maxY = minY + bmap.PARTITION_HEIGHT
 	return
 }
 

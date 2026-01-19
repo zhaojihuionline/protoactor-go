@@ -10,6 +10,14 @@ import (
 	"github.com/asynkron/protoactor-go/actor"
 )
 
+// 地图和分区尺寸常量
+const (
+	MAP_WIDTH        = 1200 // 地图宽度
+	MAP_HEIGHT       = 1200 // 地图高度
+	PARTITION_WIDTH  = 100  // 分区宽度 (必须能整除MAP_WIDTH)
+	PARTITION_HEIGHT = 100  // 分区高度 (必须能整除MAP_HEIGHT)
+)
+
 type LayerNumber int32
 
 const LayerCount = 8
