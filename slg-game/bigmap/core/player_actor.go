@@ -10,6 +10,7 @@ import (
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/asynkron/protoactor-go/slg-game/domain/bmap"
 	"github.com/asynkron/protoactor-go/slg-game/utils"
+	"github.com/asynkron/protoactor-go/slg-game/utils/calc"
 )
 
 type PlayerActor struct {
@@ -30,33 +31,6 @@ func NewPlayerActor(name string, partitionPIDs map[utils.BigmapCoord]*actor.PID)
 		CurAOIPartions: make(map[bmap.LayerNumber]map[utils.BigmapCoord]bool),
 		PartitionPIDs:  partitionPIDs,
 	}
-}
-
-// computePartitionsForAOI 计算视野范围内可能涉及的分区ID列表
-func computePartitionsForAOI(center bmap.Position, view bmap.View) []utils.BigmapCoord {
-	// view.H 屏幕中心格子坐标的上下方的格子数
-	// view.W 屏幕中心格子坐标的左右方的格子数
-
-	// AOI格子
-	minX := center.X - view.W
-	maxX := center.X + view.W
-	minY := center.Y - view.H
-	maxY := center.Y + view.H
-
-	// 分区索引范围计算（整数运算）
-	pxMin := max(0, minX/bmap.PARTITION_WIDTH)
-	pxMax := min(bmap.MAP_WIDTH/bmap.PARTITION_WIDTH-1, maxX/bmap.PARTITION_WIDTH)
-	pyMin := max(0, minY/bmap.PARTITION_HEIGHT)
-	pyMax := min(bmap.MAP_HEIGHT/bmap.PARTITION_HEIGHT-1, maxY/bmap.PARTITION_HEIGHT)
-
-	// 生成分区列表
-	var partitions []utils.BigmapCoord
-	for py := pyMin; py <= pyMax; py++ {
-		for px := pxMin; px <= pxMax; px++ {
-			partitions = append(partitions, utils.EncodeCoord(px, py))
-		}
-	}
-	return partitions
 }
 
 // partitionBounds 根据分区ID计算分区边界 (minX, minY, maxX, maxY)
@@ -82,7 +56,7 @@ func (a *PlayerActor) ensureCurAOIMap(layer bmap.LayerNumber) {
 // handleAOIUpdate 处理AOI更新，计算新的订阅集合
 func (a *PlayerActor) handleAOIUpdate(context actor.Context, layer bmap.LayerNumber, center bmap.Position, view bmap.View) {
 	// 计算视野覆盖的候选分区
-	possible := computePartitionsForAOI(center, view)
+	possible := calc.ComputePartitionsForAOI(center, view)
 
 	// 计算AOI矩形边界
 	aoiMinX := center.X - view.W
