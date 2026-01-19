@@ -50,7 +50,7 @@ type Position struct {
 	Y int32
 }
 
-type View struct {
+type Size struct {
 	W int32
 	H int32
 }
@@ -83,14 +83,14 @@ type AOICache struct {
 type EnterMap struct {
 	Layer  LayerNumber
 	Center Position
-	View   View
+	View   Size
 }
 
 // MoveView 视野移动消息
 type MoveView struct {
 	Layer  LayerNumber
 	Center Position
-	View   View
+	View   Size
 }
 
 // LeaveMap 离开大地图消息

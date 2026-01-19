@@ -22,7 +22,7 @@ func NewGameWorld(system *actor.ActorSystem, partitionManager *core.PartitionMan
 }
 
 // EnterMap 玩家进入大地图接口
-func (gw *GameWorld) EnterMap(playerID string, layer bmap.LayerNumber, center bmap.Position, view bmap.View) error {
+func (gw *GameWorld) EnterMap(playerID string, layer bmap.LayerNumber, center bmap.Position, view bmap.Size) error {
 	playerPID := gw.playerManager.GetOrCreatePlayer(playerID)
 	gw.system.Root.Send(playerPID, &bmap.EnterMap{
 		Layer:  layer,
@@ -33,7 +33,7 @@ func (gw *GameWorld) EnterMap(playerID string, layer bmap.LayerNumber, center bm
 }
 
 // MoveView 玩家视野移动接口
-func (gw *GameWorld) MoveView(playerID string, layer bmap.LayerNumber, center bmap.Position, view bmap.View) error {
+func (gw *GameWorld) MoveView(playerID string, layer bmap.LayerNumber, center bmap.Position, view bmap.Size) error {
 	playerPID := gw.playerManager.GetPlayer(playerID)
 	if playerPID == nil {
 		return gw.EnterMap(playerID, layer, center, view) // 如果玩家不存在，先进入地图

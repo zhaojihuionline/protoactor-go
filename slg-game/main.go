@@ -22,7 +22,7 @@ func main() {
 
 	// 1. 玩家进入大地图
 	fmt.Printf("\n=== 玩家 %s 进入大地图 ===\n", playerID)
-	err := gameWorld.EnterMap(playerID, 1, bmap.Position{X: 250, Y: 250}, bmap.View{W: 300, H: 300})
+	err := gameWorld.EnterMap(playerID, 1, bmap.Position{X: 250, Y: 250}, bmap.Size{W: 300, H: 300})
 	if err != nil {
 		fmt.Printf("EnterMap failed: %v\n", err)
 	}
@@ -32,7 +32,7 @@ func main() {
 
 	// 2. 玩家移动视野
 	fmt.Printf("\n=== 玩家 %s 视野移动 ===\n", playerID)
-	err = gameWorld.MoveView(playerID, 1, bmap.Position{X: 450, Y: 450}, bmap.View{W: 300, H: 300})
+	err = gameWorld.MoveView(playerID, 1, bmap.Position{X: 450, Y: 450}, bmap.Size{W: 300, H: 300})
 	if err != nil {
 		fmt.Printf("MoveView failed: %v\n", err)
 	}

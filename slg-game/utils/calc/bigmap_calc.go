@@ -6,7 +6,7 @@ import (
 )
 
 // ComputePartitionsForAOI 计算视野范围内可能涉及的分区ID列表
-func ComputePartitionsForAOI(center bmap.Position, view bmap.View) []coord.BigmapCoord {
+func ComputePartitionsForAOI(center bmap.Position, view bmap.Size) []coord.BigmapCoord {
 	// view.H 屏幕中心格子坐标的上下方的格子数
 	// view.W 屏幕中心格子坐标的左右方的格子数
 

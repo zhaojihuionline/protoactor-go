@@ -54,7 +54,7 @@ func (a *PlayerActor) ensureCurAOIMap(layer bmap.LayerNumber) {
 }
 
 // handleAOIUpdate 处理AOI更新，计算新的订阅集合
-func (a *PlayerActor) handleAOIUpdate(context actor.Context, layer bmap.LayerNumber, center bmap.Position, view bmap.View) {
+func (a *PlayerActor) handleAOIUpdate(context actor.Context, layer bmap.LayerNumber, center bmap.Position, view bmap.Size) {
 	// 计算视野覆盖的候选分区
 	possible := calc.ComputePartitionsForAOI(center, view)
 
