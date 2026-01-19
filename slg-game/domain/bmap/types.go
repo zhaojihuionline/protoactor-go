@@ -32,7 +32,7 @@ const (
 	LayerNumber8 LayerNumber = 8
 )
 
-type EntityID int64
+type EntityID int32
 type EntityType int32
 
 const (
@@ -56,7 +56,7 @@ type Size struct {
 }
 
 type Entity struct {
-	ID       int64
+	ID       int32
 	Type     EntityType
 	Data     any
 	Position *Position
@@ -65,10 +65,10 @@ type Entity struct {
 }
 
 type Grid struct {
-	ID       int64
+	ID       int32
 	Position *Position
 	Version  int64
-	EntityID int64
+	EntityID EntityID
 }
 
 type AOICache struct {
