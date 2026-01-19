@@ -61,7 +61,7 @@ type Entity struct {
 	Data     any
 	Position *Position
 	Version  int64
-	GridID   int64
+	GridID   int32
 }
 
 type Grid struct {
