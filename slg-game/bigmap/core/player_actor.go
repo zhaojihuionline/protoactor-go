@@ -21,7 +21,7 @@ type PlayerActor struct {
 	CurLayerNumber       bmap.LayerNumber
 	CurAOIPartions       map[bmap.LayerNumber]map[coord.BigmapCoord]bool
 	LastAOICache         *bmap.AOICache
-	LastLayerEntityCache map[bmap.LayerNumber]*map[bmap.EntityID]*bmap.Entity
+	LastLayerEntityCache map[bmap.LayerNumber]map[bmap.EntityID]*bmap.Entity
 	PartitionPIDs        map[coord.BigmapCoord]*actor.PID
 }
 
