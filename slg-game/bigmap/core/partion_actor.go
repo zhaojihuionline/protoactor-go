@@ -11,7 +11,7 @@ import (
 	"github.com/asynkron/protoactor-go/slg-game/domain/bmap"
 )
 
-// 格子/实体 发送变化，找到所有分区，发送格子/实体的变化
+// 格子/实体 发生变化，找到所有分区，发送格子/实体的变化
 
 type PartionActor struct {
 	actor.Actor
